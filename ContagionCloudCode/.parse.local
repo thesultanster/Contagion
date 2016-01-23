@@ -1,0 +1,10 @@
+{
+  "applications": {
+    "Contagion": {
+      "applicationId": "qDJoHUCRe1fEjAW4812QBJkP7l2hiXfliOhuq8p0"
+    },
+    "_default": {
+      "link": "Contagion"
+    }
+  }
+}

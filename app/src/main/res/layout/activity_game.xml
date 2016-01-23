@@ -30,10 +30,10 @@
 
                 <ImageView
                     android:id="@+id/timericon"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_margin="10dp"
-                    android:background="@drawable/timer"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_margin="0dp"
+                    android:background="@drawable/thetimer"
                     android:gravity="center" />
 
                 <TextView
@@ -247,7 +247,14 @@
 
 
             </RelativeLayout>
+
+
         </RelativeLayout>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="I'm It"/>
 
 
     </LinearLayout>

@@ -252,9 +252,16 @@
         </RelativeLayout>
 
         <Button
+            android:id="@+id/itButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="I'm It"/>
+
+        <Button
+            android:id="@+id/quitButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Quit Game"/>
 
 
     </LinearLayout>

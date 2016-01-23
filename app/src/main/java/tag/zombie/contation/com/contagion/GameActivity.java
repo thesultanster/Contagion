@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 public class GameActivity extends AppCompatActivity {
 
-    RelativeLayout myNotif;
+    RelativeLayout zombieAlert;
     ImageView heartImage;
     String address;
     View heartView;
@@ -25,7 +25,13 @@ public class GameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
-
+        // Inflate Variables
+        userStateView = findViewById(R.id.userstate);
+        userStateLayout = (RelativeLayout) userStateView;
+        userStateView = findViewById(R.id.user_state);
+        userStateTextView = (TextView) userStateView;
+        heartView = findViewById(R.id.heart);
+        heartImage = (ImageView) heartView;
 
     }
 
@@ -33,17 +39,15 @@ public class GameActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         View view = findViewById(R.id.zombienotification);
-        myNotif = (RelativeLayout) view;
-        myNotif.setVisibility(View.INVISIBLE);
+        zombieAlert = (RelativeLayout) view;
+        zombieAlert.setVisibility(View.INVISIBLE);
 
 
-        userStateView = findViewById(R.id.userstate);
-        userStateLayout = (RelativeLayout) userStateView;
-        userStateView = findViewById(R.id.user_state);
-        userStateTextView = (TextView) userStateView;
+        StartHeartAnimation();
+    }
 
-        heartView = findViewById(R.id.heart);
-        heartImage = (ImageView) heartView;
+    private void StartHeartAnimation(){
+
         // set its background to our AnimationDrawable XML resource.
         heartImage.setBackgroundResource(R.drawable.heart_animation_healthy);
 
@@ -56,6 +60,5 @@ public class GameActivity extends AppCompatActivity {
 
         // Start the animation (looped playback by default).
         frameAnimation.start();
-
     }
 }

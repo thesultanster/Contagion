@@ -55,5 +55,4 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
   //   error: function() {
   //     response.error("movie lookup failed");
   //   }
-  });
 });

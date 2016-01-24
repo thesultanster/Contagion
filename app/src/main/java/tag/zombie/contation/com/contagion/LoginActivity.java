@@ -56,13 +56,15 @@ public class LoginActivity extends AppCompatActivity {
                                 // Add user to array of players
                                 //TODO: Convert this to a parse Cloud Code Function
                                 //==============================================================================================
-                                ArrayList<String> testStringArrayList = (ArrayList<String>) objects.get(0).get("players");
+                                List<ParseObject> players = objects.get(0).getList("players");
 
-                                if (testStringArrayList == null)
-                                    testStringArrayList = new ArrayList<String>();
 
-                                testStringArrayList.add(ParseUser.getCurrentUser().getObjectId());
-                                objects.get(0).put("players", testStringArrayList);
+                                if (players == null)
+                                    players = new ArrayList<ParseObject>();
+
+                                players.add(ParseUser.getCurrentUser());
+                                objects.get(0).put("players", players);
+                                objects.get(0).put("healthyPlayers", players);
                                 objects.get(0).saveInBackground();
 
                                 // Increment healthy player count

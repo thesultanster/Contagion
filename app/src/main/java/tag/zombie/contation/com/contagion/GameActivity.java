@@ -31,8 +31,13 @@ public class GameActivity extends AppCompatActivity {
     View userStateView;
     TextView userStateTextView;
 
+    TextView healthyPlayers;
+    TextView infectedPlayers;
+
     Button itButton;
     Button quitButton;
+
+    ParseObject game;
 
     double myX, myY;
 
@@ -49,8 +54,6 @@ public class GameActivity extends AppCompatActivity {
 
         //Start Listener Thread
         StartListenerThread();
-
-
 
     }
 
@@ -71,6 +74,8 @@ public class GameActivity extends AppCompatActivity {
         userStateLayout = (RelativeLayout) userStateView;
         userStateView = findViewById(R.id.user_state);
         userStateTextView = (TextView) userStateView;
+        healthyPlayers = (TextView) findViewById(R.id.healthyPlayers);
+        infectedPlayers = (TextView) findViewById(R.id.infectedPlayers);
         heartView = findViewById(R.id.heart);
         heartImage = (ImageView) heartView;
         itButton = (Button) findViewById(R.id.itButton);
@@ -95,6 +100,23 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void UpdateGame(){
+
+
+        ParseQuery<ParseObject> query = new ParseQuery("Game");
+        query.whereEqualTo("objectId", "m3rnAai0Hf");
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> objects, ParseException e) {
+
+                game = objects.get(0);
+
+                healthyPlayers.setText(game.getInt("healthyCount") + "");
+                infectedPlayers.setText(game.getInt("infectedCount") + "");
+
+            }
+
+
+        });
 
     }
 
@@ -134,18 +156,15 @@ public class GameActivity extends AppCompatActivity {
                     public void done(List<ParseObject> objects, ParseException e) {
 
 
-
-                        // remove user to array of players
-                        //TODO: Convert this to a parse Cloud Code Function
+                        //TODO: Convert this to a parse Cloud Code Function (PlayerQuit)
                         //==============================================================================================
-                        ArrayList<String> testStringArrayList = (ArrayList<String>) objects.get(0).get("players");
-
-                        if (testStringArrayList == null)
-                            testStringArrayList = new ArrayList<String>();
+                        // remove user to array of players
+                        List<ParseObject> players = objects.get(0).getList("players");
 
 
-                        testStringArrayList.remove(ParseUser.getCurrentUser().getObjectId());
-                        objects.get(0).put("players", testStringArrayList);
+
+                        players.remove(ParseUser.getCurrentUser());
+                        objects.get(0).put("players", players);
                         objects.get(0).saveInBackground();
 
                         // TODO: Find out if user is healthy or infected and decrement that
@@ -167,9 +186,45 @@ public class GameActivity extends AppCompatActivity {
 
 
 
+            }
+        });
+
+
+
+
+
+        itButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                // If game object exists
+                if(game != null){
+
+
+                    // TODO: Convert this to Parse Cloud Code (AddInfected)
+                    //==============================================================================================
+                    // Remove from healthy list
+                    List<ParseObject> healthyPlayers = game.getList("healthyPlayers");
+                    healthyPlayers.remove(ParseUser.getCurrentUser());
+                    game.put("healthyPlayers", healthyPlayers);
+                    game.saveInBackground();
+
+                    // Increment infected
+                    game.increment("infectedCount", 1);
+
+                    // Decrement healthy
+                    game.increment("healthyCount", -1);
+
+                    //==============================================================================================
+
+
+
+
+                }
 
             }
         });
+
     }
 
 

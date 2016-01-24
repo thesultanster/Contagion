@@ -171,7 +171,7 @@
                         android:textSize="25sp" />
 
                     <TextView
-                        android:id="@+id/zone_infected"
+                        android:id="@+id/infectedPlayers"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/infectedtitle"
@@ -203,7 +203,7 @@
                         android:textSize="25sp" />
 
                     <TextView
-                        android:id="@+id/zone_safe"
+                        android:id="@+id/healthyPlayers"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/safetitle"

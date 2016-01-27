@@ -215,6 +215,8 @@ public class GameActivity extends AppCompatActivity {
                     // Decrement healthy
                     game.increment("healthyCount", -1);
 
+                    itButton.setVisibility(view.GONE);
+
                     //==============================================================================================
 
 

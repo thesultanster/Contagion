@@ -1,6 +1,7 @@
 package tag.zombie.contation.com.contagion;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -216,6 +217,12 @@ public class GameActivity extends AppCompatActivity {
                     game.increment("healthyCount", -1);
 
                     itButton.setVisibility(view.GONE);
+
+                    userStateTextView.setText("Infected");
+                    userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
+                    heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
+                    frameAnimation = (AnimationDrawable) heartImage.getBackground();
+                    frameAnimation.start();
 
                     //==============================================================================================
 

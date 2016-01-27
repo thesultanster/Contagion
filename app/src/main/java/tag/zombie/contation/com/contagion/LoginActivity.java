@@ -51,7 +51,6 @@ public class LoginActivity extends AppCompatActivity {
 
                         HashMap<String, Object> params = new HashMap<String, Object>();
                         params.put("gameId","m3rnAai0Hf");
-                        params.put("user",ParseUser.getCurrentUser().toString());
 
                         ParseCloud.callFunctionInBackground("addPersonToGame", params, new FunctionCallback<String>() {
                             public void done(String response, ParseException e) {

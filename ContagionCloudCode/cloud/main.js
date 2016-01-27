@@ -25,14 +25,13 @@
 // });
 
 /* addPersonToGame
-    input:  user    -   user pointer (assumes taken from getCurrentUser()
-            gameID  -   game objectid (passed in as a string)
-    output: success should return a yay of some sort
+    input: gameID  -   game objectid (passed in as a string)
+    output: current user is added to the game, and a success string is passed back
 */
 Parse.Cloud.define("addPersonToGame", function(request, response) {
 
-  //assumes request
-  var user = request.params.user;
+  //gets currnt parse user
+  var user = Parse.User.current();
   var gameId  = request.params.gameId;
   var query = new Parse.Query("Game");
 
@@ -41,11 +40,15 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
 
   query.first({
     success: function(post) {
+
       // Successfully retrieved the object.
+
+      //Adding user to the game
       post.addUnique("players", user);
       post.addUnique("healthyPlayers", user);
       post.increment("healthyCount");
       post.save();
+
       response.success("***Added Player to the Game!***\t " + post.get("objectId"));
     },
     error: function(error) {
@@ -53,21 +56,5 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
       response.error("***Did not add player to the game*** \t");
     }
   });
-
-  // response.success("***addPersonToGame is DONE***");
-
-  // var query = new Parse.Query("Review");
-  // query.equalTo("movie", request.params.movie);
-  // query.find({
-  //   success: function(results) {
-  //     var sum = 0;
-  //     for (var i = 0; i < results.length; ++i) {
-  //       sum += results[i].get("stars");
-  //     }
-  //     response.success(sum / results.length);
-  //   },
-  //   error: function() {
-  //     response.error("movie lookup failed");
-  //   }
 });
 

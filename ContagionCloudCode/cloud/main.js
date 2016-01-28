@@ -30,12 +30,11 @@
 */
 Parse.Cloud.define("addPersonToGame", function(request, response) {
 
-  //gets currnt parse user
+  //gets current parse user
   var user = Parse.User.current();
   var gameId  = request.params.gameId;
-  var query = new Parse.Query("Game");
 
-  // query.equalTo("gameState", 0);
+  var query = new Parse.Query("Game");
   query.equalTo("objectId", gameId);
 
   query.first({
@@ -53,8 +52,33 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
     },
     error: function(error) {
       alert("Error: " + error.code + " " + error.message);
-      response.error("***Did not add player to the game*** \t");
+      response.error(" <ERROR> <addPersonToGame> ***Did not add player to the game***  <ERROR> <addPersonToGame> ");
     }
   });
 });
 
+/* ImIt
+    input: gameId - (string) game objectid of the game the user is currently in
+    output: current user is put on the Infected list, and a success string is passed back
+*/
+Parse.Cloud.define("ImIt", function(request, response) {
+
+  //gets current parse user
+  var user = Parse.User.current();
+  var gameId = request.params.gameId
+
+  var query = new Parse.Query("Game");
+  query.equalTo("objectId", gameId);
+
+  query.first({ 
+    success: function(post) { 
+      post.remove("healthyPlayers",user);
+      post.increment("healthyCount", -1);
+      post.save();
+    }, 
+    error: function(error) {
+      alert("Error: " + error.code + " " + error.message);
+      response.error(" <ERROR> <ImIt> ***Did not change player to it*** <ImIt> <ERROR> ");
+    }
+  });
+});

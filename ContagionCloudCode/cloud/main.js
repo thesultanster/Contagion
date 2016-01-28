@@ -48,11 +48,11 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
       post.increment("healthyCount");
       post.save();
 
-      response.success("***Added Player to the Game!***\t " + post.get("objectId"));
+      response.success("<addPersonToGame> ***Added Player to the Game!\t " + post.get("objectId") + "*** <addPersonToGame>");
     },
     error: function(error) {
       alert("Error: " + error.code + " " + error.message);
-      response.error(" <ERROR> <addPersonToGame> ***Did not add player to the game***  <ERROR> <addPersonToGame> ");
+      response.error(" <ERROR> <addPersonToGame> ***Did not add player to the game*** <addPersonToGame> <ERROR>");
     }
   });
 });
@@ -75,6 +75,7 @@ Parse.Cloud.define("ImIt", function(request, response) {
       post.remove("healthyPlayers",user);
       post.increment("healthyCount", -1);
       post.save();
+      response.success("<ImIt> ***I became the It*** <ImIt>");
     }, 
     error: function(error) {
       alert("Error: " + error.code + " " + error.message);

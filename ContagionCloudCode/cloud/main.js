@@ -63,6 +63,8 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
 */
 Parse.Cloud.define("ImIt", function(request, response) {
 
+  //TODO: check if currentUser in save zones (geofencing) 
+
   //gets current parse user
   var user = Parse.User.current();
   var gameId = request.params.gameId

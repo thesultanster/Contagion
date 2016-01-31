@@ -66,6 +66,8 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
 */
 Parse.Cloud.define("addInfected", function(request, response) {
 
+  //TODO: check if currentUser in save zones (geofencing) 
+
   //gets current parse user
   var user = Parse.User.current();
   var game = user.gameId;

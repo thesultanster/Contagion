@@ -47,6 +47,9 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
       post.addUnique("healthyPlayers", user);
       post.increment("healthyCount");
       post.save();
+      user.set("gameId", "{\"__type\":\"Pointer\",\"className\":\"Game\",\"objectId\":\""+gameId+"\"}");
+      user.set("status", "healthy");
+      user.save();
 
       response.success("<addPersonToGame> ***Added Player to the Game!\t " + post.get("objectId") + "*** <addPersonToGame>");
     },
@@ -61,25 +64,15 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
     input: gameId - (string) game objectid of the game the user is currently in
     output: current user is put on the Infected list, and a success string is passed back
 */
-Parse.Cloud.define("ImIt", function(request, response) {
+Parse.Cloud.define("addInfected", function(request, response) {
 
   //gets current parse user
   var user = Parse.User.current();
-  var gameId = request.params.gameId
-
-  var query = new Parse.Query("Game");
-  query.equalTo("objectId", gameId);
-
-  query.first({ 
-    success: function(post) { 
-      post.remove("healthyPlayers",user);
-      post.increment("healthyCount", -1);
-      post.save();
-      response.success("<ImIt> ***I became the It*** <ImIt>");
-    }, 
-    error: function(error) {
-      alert("Error: " + error.code + " " + error.message);
-      response.error(" <ERROR> <ImIt> ***Did not change player to it*** <ImIt> <ERROR> ");
-    }
-  });
+  var game = user.gameId;
+  user.set("status", "infected");
+  user.save();
+  game.increment("healthyCount", -1);
+  game.remove("healthyPlayers", user);
+  game.save();
+  response.success("<addInfected> ***I became the It*** <addInfected>");
 });

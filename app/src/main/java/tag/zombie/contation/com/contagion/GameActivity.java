@@ -13,12 +13,15 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.parse.FindCallback;
+import com.parse.FunctionCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class GameActivity extends AppCompatActivity {
@@ -201,20 +204,19 @@ public class GameActivity extends AppCompatActivity {
                 // If game object exists
                 if(game != null){
 
+                    HashMap<String, Object> params = new HashMap<String, Object>();
+                    params.put("gameId","m3rnAai0Hf");
 
-                    // TODO: Convert this to Parse Cloud Code (AddInfected)
-                    //==============================================================================================
-                    // Remove from healthy list
-                    List<ParseObject> healthyPlayers = game.getList("healthyPlayers");
-                    healthyPlayers.remove(ParseUser.getCurrentUser());
-                    game.put("healthyPlayers", healthyPlayers);
-                    game.saveInBackground();
-
-                    // Increment infected
-                    game.increment("infectedCount", 1);
-
-                    // Decrement healthy
-                    game.increment("healthyCount", -1);
+                    ParseCloud.callFunctionInBackground("addInfected", params, new FunctionCallback<String>() {
+                        public void done(String response, ParseException e) {
+                            if (e == null) {
+                                Log.d("<CLOUD CODE BITCH>", response);
+                            } else {
+                                Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
+                                Log.d("<CLOUD CODE BITCH>", e.toString());
+                            }
+                        }
+                    });
 
                     itButton.setVisibility(view.GONE);
 
@@ -223,9 +225,31 @@ public class GameActivity extends AppCompatActivity {
                     heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
                     frameAnimation = (AnimationDrawable) heartImage.getBackground();
                     frameAnimation.start();
-
-                    //==============================================================================================
-
+//
+//                    // TODO: Convert this to Parse Cloud Code (AddInfected)
+//                    //==============================================================================================
+//                    // Remove from healthy list
+//                    List<ParseObject> healthyPlayers = game.getList("healthyPlayers");
+//                    healthyPlayers.remove(ParseUser.getCurrentUser());
+//                    game.put("healthyPlayers", healthyPlayers);
+//                    game.saveInBackground();
+//
+//                    // Increment infected
+//                    game.increment("infectedCount", 1);
+//
+//                    // Decrement healthy
+//                    game.increment("healthyCount", -1);
+//
+//                    itButton.setVisibility(view.GONE);
+//
+//                    userStateTextView.setText("Infected");
+//                    userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
+//                    heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
+//                    frameAnimation = (AnimationDrawable) heartImage.getBackground();
+//                    frameAnimation.start();
+//
+//                    //==============================================================================================
+//
 
 
 

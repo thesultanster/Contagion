@@ -160,29 +160,47 @@ public class GameActivity extends AppCompatActivity {
                     public void done(List<ParseObject> objects, ParseException e) {
 
 
-                        //TODO: Convert this to a parse Cloud Code Function (PlayerQuit)
-                        //==============================================================================================
-                        // remove user to array of players
-                        List<ParseObject> players = objects.get(0).getList("players");
+                        HashMap<String, Object> params = new HashMap<String, Object>();
+                        params.put("gameId","m3rnAai0Hf");
 
-
-
-                        players.remove(ParseUser.getCurrentUser());
-                        objects.get(0).put("players", players);
-                        objects.get(0).saveInBackground();
-
-                        // TODO: Find out if user is healthy or infected and decrement that
-                        // Decrement healthy player count
-                        objects.get(0).increment("healthyCount", -1);
-                        objects.get(0).saveInBackground();
-                        //==============================================================================================
-
-
-
+                        ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
+                            public void done(String response, ParseException e) {
+                                if (e == null) {
+                                    Log.d("<CLOUD CODE BITCH>", response);
+                                } else {
+                                    Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
+                                    Log.d("<CLOUD CODE BITCH>", e.toString());
+                                }
+                            }
+                        });
 
                         Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                         startActivity(intent);
-                        Log.d("MyApp", "Anonymous user logged in.");
+                        Log.d("MyApp", "Anonymous user left game");
+
+//                        //TODO: Convert this to a parse Cloud Code Function (PlayerQuit)
+//                        //==============================================================================================
+//                        // remove user to array of players
+//                        List<ParseObject> players = objects.get(0).getList("players");
+//
+//
+//
+//                        players.remove(ParseUser.getCurrentUser());
+//                        objects.get(0).put("players", players);
+//                        objects.get(0).saveInBackground();
+//
+//                        // TODO: Find out if user is healthy or infected and decrement that
+//                        // Decrement healthy player count
+//                        objects.get(0).increment("healthyCount", -1);
+//                        objects.get(0).saveInBackground();
+//                        //==============================================================================================
+//
+//
+//
+//
+//                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+//                        startActivity(intent);
+//                        Log.d("MyApp", "Anonymous user logged in.");
                     }
 
 

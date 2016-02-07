@@ -101,7 +101,7 @@ Parse.Cloud.define("leaveGame", function(request,response) {
         game.increment("healthyCount", -1);
         game.remove("healthyPlayers", user)
       }
-      else
+      else if (user.get("status") == "infected")
         //else decrement infectCount
         game.increment("infectedCount", -1);
 
@@ -111,7 +111,7 @@ Parse.Cloud.define("leaveGame", function(request,response) {
 
       //set the user status to notPlaying set gameId to null
       user.set("status", "notPlaying");
-      user.remove("gameId");
+      user.unset("gameId");
       user.save();
       response.success("<leaveGame> ***I left lol*** <leaveGame>");
     },

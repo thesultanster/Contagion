@@ -138,15 +138,11 @@ public class GameActivity extends AppCompatActivity {
                         }
                     });
 
-
                     Log.d("MyApp", "Game is Over!");
 
                     Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                     startActivity(intent);
                     finish();
-
-
-
                 }
             }
 

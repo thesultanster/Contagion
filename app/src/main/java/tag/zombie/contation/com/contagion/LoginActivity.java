@@ -64,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
                         });
                         Intent intent = new Intent(getApplicationContext(), GameActivity.class);
                         startActivity(intent);
+                        finish();
                         Log.d("MyApp", "Anonymous user logged in.");
 //                        ParseQuery<ParseObject> query = new ParseQuery("Game");
 //                        query.whereEqualTo("objectId", "m3rnAai0Hf");

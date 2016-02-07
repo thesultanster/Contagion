@@ -43,6 +43,8 @@ public class GameActivity extends AppCompatActivity {
 
     ParseObject game;
 
+    WorkerThread listenerThread;
+
     double myX, myY;
 
     @Override
@@ -103,7 +105,7 @@ public class GameActivity extends AppCompatActivity {
         frameAnimation.start();
     }
 
-    private void UpdateGame(){
+    private void UpdateGame() {
 
 
         ParseQuery<ParseObject> query = new ParseQuery("Game");
@@ -117,6 +119,35 @@ public class GameActivity extends AppCompatActivity {
                 healthyPlayers.setText(game.getInt("healthyCount") + "");
                 infectedPlayers.setText(game.getInt("infectedCount") + "");
 
+                if (game.getInt("healthyCount") == 0) {
+
+                    listenerThread.stahp();
+                    listenerThread.interrupt();
+
+                    HashMap<String, Object> params = new HashMap<String, Object>();
+
+                    ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
+                        public void done(String response, ParseException e) {
+                            if (e == null) {
+                                Log.d("<CLOUD CODE BITCH>", response);
+
+                            } else {
+                                Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
+                                Log.d("<CLOUD CODE BITCH>", e.toString());
+                            }
+                        }
+                    });
+
+
+                    Log.d("MyApp", "Game is Over!");
+
+                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+
+
+
+                }
             }
 
 
@@ -124,34 +155,50 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
-    private void StartListenerThread(){
-        Thread listenerThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while (!isInterrupted()) {
-                        Thread.sleep(1000);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
+    class WorkerThread extends Thread {
+        volatile boolean running = true;
+
+        @Override
+        public void run() {
+            try {
+                while (!isInterrupted()) {
+                    Thread.sleep(200);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(running)
                                 UpdateGame();
-                            }
-                        });
-                    }
-                } catch (InterruptedException e) {
+                        }
+                    });
                 }
+
+                if(isInterrupted()){
+                    return;
+                }
+
+
+            } catch (InterruptedException e) {
             }
-        };
+        }
 
+        public void stahp() {
+            running = false;
+        }
+    }
 
+    private void StartListenerThread() {
+        listenerThread = new WorkerThread();
         listenerThread.start();
     }
 
 
-    private void SetClickListeners(){
+    private void SetClickListeners() {
         quitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                listenerThread.stahp();
+                listenerThread.interrupt();
 
                 ParseQuery<ParseObject> query = new ParseQuery("Game");
                 query.whereEqualTo("objectId", "m3rnAai0Hf");
@@ -161,12 +208,13 @@ public class GameActivity extends AppCompatActivity {
 
 
                         HashMap<String, Object> params = new HashMap<String, Object>();
-                        params.put("gameId","m3rnAai0Hf");
 
                         ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
                             public void done(String response, ParseException e) {
                                 if (e == null) {
                                     Log.d("<CLOUD CODE BITCH>", response);
+
+
                                 } else {
                                     Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
                                     Log.d("<CLOUD CODE BITCH>", e.toString());
@@ -174,9 +222,12 @@ public class GameActivity extends AppCompatActivity {
                             }
                         });
 
+
+                        Log.d("MyApp", "Anonymous user left game");
+
                         Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                         startActivity(intent);
-                        Log.d("MyApp", "Anonymous user left game");
+                        finish();
 
 //                        //TODO: Convert this to a parse Cloud Code Function (PlayerQuit)
 //                        //==============================================================================================
@@ -207,12 +258,8 @@ public class GameActivity extends AppCompatActivity {
                 });
 
 
-
             }
         });
-
-
-
 
 
         itButton.setOnClickListener(new View.OnClickListener() {
@@ -220,10 +267,10 @@ public class GameActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 // If game object exists
-                if(game != null){
+                if (game != null) {
 
                     HashMap<String, Object> params = new HashMap<String, Object>();
-                    params.put("gameId","m3rnAai0Hf");
+                    params.put("gameId", "m3rnAai0Hf");
 
                     ParseCloud.callFunctionInBackground("addInfected", params, new FunctionCallback<String>() {
                         public void done(String response, ParseException e) {
@@ -268,7 +315,6 @@ public class GameActivity extends AppCompatActivity {
 //
 //                    //==============================================================================================
 //
-
 
 
                 }

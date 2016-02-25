@@ -1,4 +1,4 @@
-package tag.zombie.contation.com.contagion.Util;
+package tag.zombie.contagion.Util;
 
 import com.parse.Parse;
 

@@ -39,23 +39,15 @@ public class LoginActivity extends AppCompatActivity {
                         Log.d("MyApp", "Anonymous login failed.");
                     } else {
 
-
-
                         Intent intent = new Intent(getApplicationContext(), GameListActivity.class);
                         startActivity(intent);
                         finish();
                         Log.d("MyApp", "Anonymous user logged in.");
-
-
-
                     }
                 }
             });
 
-
-
         }
     };
-
 
 }

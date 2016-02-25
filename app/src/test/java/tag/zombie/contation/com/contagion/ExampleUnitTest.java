@@ -1,4 +1,4 @@
-package tag.zombie.contation.com.contagion;
+package tag.zombie.contagion;
 
 import org.junit.Test;
 

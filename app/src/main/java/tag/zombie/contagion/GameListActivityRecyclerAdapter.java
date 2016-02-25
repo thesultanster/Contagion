@@ -99,8 +99,8 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
         GameListActivityRecyclerInfo current = data.get(position);
 
         holder.name.setText(current.getName());
+        holder.playerCount.setText(current.getPlayerCount());
     }
-
 
     @Override
     public int getItemCount() {
@@ -110,8 +110,8 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
     // Created my custom view holder
     public static class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-
         TextView name;
+        TextView playerCount;
 
         public MyViewHolderClicks mListener;
 
@@ -121,6 +121,7 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
 
             mListener = listener;
             name = (TextView) itemView.findViewById(R.id.name);
+            playerCount = (TextView) itemView.findViewById(R.id.playerCount);
             itemView.setOnClickListener(this);
 
         }

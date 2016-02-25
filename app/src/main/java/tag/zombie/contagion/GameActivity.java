@@ -117,7 +117,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void UpdateGame() {
 
-
         ParseQuery<ParseObject> query = new ParseQuery("Game");
         query.whereEqualTo("objectId", "m3rnAai0Hf");
         query.findInBackground(new FindCallback<ParseObject>() {

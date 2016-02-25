@@ -30,7 +30,6 @@ public class GameListActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
 
-
         //Setup Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if (toolbar != null) {
@@ -43,7 +42,6 @@ public class GameListActivity extends AppCompatActivity{
         InflateVariables();
 
         Refresh();
-
     }
 
 
@@ -61,8 +59,6 @@ public class GameListActivity extends AppCompatActivity{
                 Refresh();
             }
         });
-
-
     }
 
 
@@ -77,7 +73,6 @@ public class GameListActivity extends AppCompatActivity{
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Game");
         query.findInBackground(new FindCallback<ParseObject>() {
 
-
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
 
@@ -88,7 +83,5 @@ public class GameListActivity extends AppCompatActivity{
             }
         });
     }
-
-
 
 }

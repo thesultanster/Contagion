@@ -49,6 +49,7 @@ Parse.Cloud.define("addInfected", function(request, response) {
 
   var query = new Parse.Query("Game");
   query.equalTo(user.gameId);
+  query.containedIn("players",[user]);
 
   query.first({
     success: function(game) {
@@ -89,6 +90,7 @@ Parse.Cloud.define("leaveGame", function(request,response) {
 
   var query = new Parse.Query("Game");
   query.equalTo(user.gameId);
+  query.containedIn("players",[user]);
 
   query.first({
     success: function(game) {

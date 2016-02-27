@@ -1,8 +1,9 @@
-package tag.zombie.contation.com.contagion;
+package tag.zombie.contagion;
 
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,19 +13,23 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ParseUser;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback{
 
     RelativeLayout zombieAlert;
     ImageView heartImage;
@@ -45,7 +50,7 @@ public class GameActivity extends AppCompatActivity {
 
     WorkerThread listenerThread;
 
-    double myX, myY;
+    GoogleMap map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +65,11 @@ public class GameActivity extends AppCompatActivity {
 
         //Start Listener Thread
         StartListenerThread();
+
+        MapFragment mapFragment = (MapFragment) getFragmentManager()
+        .findFragmentById(R.id.map);
+
+        mapFragment.getMapAsync(this);
 
     }
 
@@ -107,7 +117,6 @@ public class GameActivity extends AppCompatActivity {
 
     private void UpdateGame() {
 
-
         ParseQuery<ParseObject> query = new ParseQuery("Game");
         query.whereEqualTo("objectId", "m3rnAai0Hf");
         query.findInBackground(new FindCallback<ParseObject>() {
@@ -149,6 +158,19 @@ public class GameActivity extends AppCompatActivity {
 
         });
 
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        LatLng sydney = new LatLng(-33.867, 151.206);
+
+        map.setMyLocationEnabled(true);
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
+
+        map.addMarker(new MarkerOptions()
+                .title("Sydney")
+                .snippet("The most populous city in Australia.")
+                .position(sydney));
     }
 
     class WorkerThread extends Thread {

@@ -124,3 +124,27 @@ Parse.Cloud.define("leaveGame", function(request,response) {
   });
 
 });
+
+/* newGame
+    input: gameName  -   game room name (passed in as a string)
+    output: current user is added to the game, and a success string is passed back
+*/
+Parse.Cloud.define("newGame", function(request, response) {
+
+  var Game = Parse.Object.extend("Game");
+  var game = new Game();
+  if (request.params.gameName) {
+    game.gameName = request.params.gameName;
+  }
+  game.save(null, {
+    success: function(game) {
+      alert("newGame created " + gameId);
+      response.success("<newGame> ***Created new game!\t " + gameId + "*** <newGame>");
+    },
+    error: function(game, error) {
+      alert("Error: " + error.code + " " + error.message);
+      response.error(" <ERROR> <newGame> ***Could not create new game*** <newGame> <ERROR>");
+    }
+  });
+
+});

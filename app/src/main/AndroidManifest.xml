@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"
 package="tag.zombie.contagion">
 
+<uses-permission android:name="android.permission.NFC" />
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-
-<application android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name"
+    <application android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name"
     android:supportsRtl="true" android:name=".Util.Application" android:theme="@style/AppTheme">
 
     <meta-data android:name="com.google.android.geo.API_KEY"
@@ -15,15 +15,24 @@ package="tag.zombie.contagion">
     <activity android:name="tag.zombie.contagion.MapsActivity" android:label="@string/title_activity_maps">
 
     </activity>
+
     <activity android:name=".LoginActivity">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
-
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
     </activity>
-    <activity android:name=".GameActivity" />
+
+    <activity android:name=".GameActivity" >
+        <intent-filter>
+            <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <data android:mimeType="application/tag.zombie.contagion" />
+        </intent-filter>
+    </activity>
+
     <activity android:name=".LobbyActivity" />
+
     <activity android:name=".GameListActivity"></activity>
 
     <meta-data android:name="com.parse.APPLICATION_ID" android:value="qDJoHUCRe1fEjAW4812QBJkP7l2hiXfliOhuq8p0" />

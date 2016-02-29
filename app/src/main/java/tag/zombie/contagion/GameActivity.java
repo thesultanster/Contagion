@@ -1,11 +1,26 @@
 package tag.zombie.contagion;
 
-import android.app.Activity;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertiseData;
+import android.bluetooth.le.AdvertiseSettings;
+import android.bluetooth.le.BluetoothLeAdvertiser;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,12 +31,17 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import android.nfc.NfcAdapter;
-import android.nfc.Tag;
-import android.nfc.tech.Ndef;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter.CreateNdefMessageCallback;
 import android.nfc.NfcEvent;
 import android.nfc.NdefRecord;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.ScanCallback;
+
+import android.media.MediaPlayer;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -35,13 +55,24 @@ import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseUser;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.UUID;
+import java.util.logging.ErrorManager;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback, CreateNdefMessageCallback{
 
-    /* UI Stuff */
+    /*===Parse Stuff===*/
+    ParseObject game;
+    WorkerThread listenerThread;
+
+    /*===UI Stuff===*/
     RelativeLayout zombieAlert;
     ImageView heartImage;
     String address;
@@ -50,26 +81,38 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     RelativeLayout userStateLayout;
     View userStateView;
     TextView userStateTextView;
-
     TextView healthyPlayers;
     TextView infectedPlayers;
-
     Button itButton;
     Button quitButton;
+    MediaPlayer soundEffects;
+    Uri screamEffect;
 
-    /* Parse Stuff */
-    ParseObject game;
-    WorkerThread listenerThread;
 
-    /* Google Map Stuff */
+    /*===Google Map Stuff===*/
     GoogleMap map;
 
     /* Nfc Stuff */
+    final private  int REQUEST_ENABLE_BT = 1;
     NfcAdapter mNfcAdapter;
     public static final String MIME_TYPE = "application/tag.zombie.contagion";
     boolean nfc = true;
 
-    /* onCreate */
+    /* Bluetooth Stuff */
+    boolean hunted = true;
+    private BluetoothManager bluetoothManager;
+    private BluetoothAdapter mBluetoothAdapter;
+
+    private BluetoothLeAdvertiser advertiserBLE;
+    private AdvertiseSettings advertiseSettings;
+    private AdvertiseData advertiseData;
+
+    private BluetoothLeScanner scannerBLE;
+    private ScanSettings scanSettings;
+    private ArrayList<ScanFilter> scanFilters;
+    private String totallyLegitUuid = "38494638-8cf0-11bd-b23e-10b96e4ef00d";
+
+    /*===onCreate===*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,28 +132,15 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mapFragment.getMapAsync(this);
 
-        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
-
-        //will equal NULL if phone does not have an NFC adapter
-        if (mNfcAdapter == null) {
-            nfc = false;
-        }
-        //request to enable NFC if bot enabled
-        else if (!mNfcAdapter.isEnabled()) {
-            Intent intent = new Intent(Settings.ACTION_NFC_SETTINGS);
-            startActivity(intent);
-            nfc = true;
-        }
-
         //check if nfc is enabled if it is then handle nfc intent
         if (nfc) {
             handleIntent(getIntent());
         }
-        //
+        //sets the NdefMessage to push during beam
         if(nfc)  mNfcAdapter.setNdefPushMessageCallback(this,this);
     }
 
-    /* Start of Activity */
+    /*===Start of Activity===*/
 
     @Override
     protected void onStart() {
@@ -123,7 +153,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         StartHeartAnimation();
     }
 
-    /* UI STUFF */
+    /*===UI STUFF===*/
 
     private void inflateVariables() {
         // Inflate Variables
@@ -138,8 +168,59 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         itButton = (Button) findViewById(R.id.itButton);
         quitButton = (Button) findViewById(R.id.quitButton);
 
+        //NFC
+        mNfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        //will equal NULL if phone does not have an NFC adapter
+        if (mNfcAdapter == null) {
+            nfc = false;
+        }
+        //request to enable NFC if not enabled
+        else if (!mNfcAdapter.isEnabled()) {
+            Intent intent = new Intent(Settings.ACTION_NFC_SETTINGS);
+            startActivity(intent);
+            nfc = true;
+        }
+
+        //Media
+        PackageManager m = getPackageManager();
+        String s = getPackageName();
+        try {
+            PackageInfo p = m.getPackageInfo(s, 0);
+            s = p.applicationInfo.dataDir;
+        } catch (Exception e) {
+
+        }
+        screamEffect = Uri.parse(s + "/scream.mp3");
+        soundEffects = MediaPlayer.create(this,R.raw.scream);
+        soundEffects.setLooping(false);
+//        soundEffects.start();
+
+
+        //Bluetooth
+        bluetoothManager = (BluetoothManager) getSystemService(GameActivity.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+        // Ensures Bluetooth is available on the device and it is enabled. If not,
+        // displays a dialog requesting user permission to enable Bluetooth.
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+        //ParcelUid to put into AdvertiseData
+        ParcelUuid acceptableUuid = new ParcelUuid(UUID.fromString(totallyLegitUuid));
+
+        advertiserBLE = mBluetoothAdapter.getBluetoothLeAdvertiser();
+        advertiseData = new AdvertiseData.Builder().addServiceUuid(acceptableUuid).build();
+        advertiseSettings = new AdvertiseSettings.Builder().setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW).setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY).build();
+
+        scannerBLE = mBluetoothAdapter.getBluetoothLeScanner();
+        scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build();
+        ScanFilter temp = new ScanFilter.Builder().setServiceUuid(acceptableUuid).build();
+        scanFilters = new ArrayList<ScanFilter>();
+        scanFilters.add(temp);
     }
 
+    /*===Makes the Heart beat==*/
     private void StartHeartAnimation() {
 
         // set its background to our AnimationDrawable XML resource.
@@ -156,7 +237,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         frameAnimation.start();
     }
 
-    /* Game Stuff */
+    /*===Game Stuff===*/
 
     private void UpdateGame() {
 
@@ -182,7 +263,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         public void done(String response, ParseException e) {
                             if (e == null) {
                                 Log.d("<CLOUD CODE BITCH>", response);
-
                             } else {
                                 Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
                                 Log.d("<CLOUD CODE BITCH>", e.toString());
@@ -201,6 +281,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         });
 
+        bluetoothUpdate();
     }
 
 
@@ -274,6 +355,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                         Log.d("MyApp", "Anonymous user left game");
 
+                        stopBluetooh();
+
                         Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                         startActivity(intent);
                         finish();
@@ -335,6 +418,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     frameAnimation = (AnimationDrawable) heartImage.getBackground();
                     frameAnimation.start();
 
+                    taggedUpdateBLE();
+
                     /*Before Cloud Code
                     // Remove from healthy list
                     List<ParseObject> healthyPlayers = game.getList("healthyPlayers");
@@ -362,7 +447,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    /* GoogleMaps Stuff */
+    /*===GoogleMaps Stuff===*/
 
     @Override
     public void onMapReady(GoogleMap map) {
@@ -423,6 +508,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
                 frameAnimation = (AnimationDrawable) heartImage.getBackground();
                 frameAnimation.start();
+
+                taggedUpdateBLE();
             } else {
                 Log.d("<Contagion> NFC", "Wrong mime type: " + type);
             }
@@ -434,18 +521,72 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public NdefMessage createNdefMessage(NfcEvent event) {
         String text = ("Tag YAH BIATCH!");
         NdefMessage msg = new NdefMessage(
-                new NdefRecord[] { NdefRecord.createMime(MIME_TYPE, text.getBytes())
-                        /**
-                         * The Android Application Record (AAR) is commented out. When a device
-                         * receives a push with an AAR in it, the application specified in the AAR
-                         * is guaranteed to run. The AAR overrides the tag dispatch system.
-                         * You can add it back in to guarantee that this
-                         * activity starts when receiving a beamed message. For now, this code
-                         * uses the tag dispatch system.
-                         */
-                        //,NdefRecord.createApplicationRecord()
-                });
+                new NdefRecord[] { NdefRecord.createMime(MIME_TYPE, text.getBytes()) }
+        );
         return msg;
+    }
+
+    /*===Bluetooth Stuff===*/
+    public void bluetoothUpdate() {
+        //BLE Scan for zombies
+        if(hunted) {
+            //healthy people code
+            Log.d("<Game Update>", "Still running from them damn zombeez :(");
+            scannerBLE.stopScan(scanBLEcallBack);
+            scannerBLE.startScan(scanFilters,scanSettings,scanBLEcallBack);
+        }
+        else {
+            //zombie people code
+            Log.d("<GAME Update>", "GET DEM BRAINZ");
+            advertiserBLE.startAdvertising(advertiseSettings,advertiseData,advertiseCallback);
+        }
+    }
+
+    public AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
+        @Override
+        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+            Log.d("<Bluetooth Advertising>", "I AM A ZOMBEE");
+//            super.onStartSuccess(settingsInEffect);
+        }
+
+        @Override
+        public void onStartFailure(int errorCode) {
+            Log.d("<Bluetooth Advertising>", "IT'S NOT WORKING:");
+            super.onStartFailure(errorCode);
+        }
+    };
+
+    public ScanCallback scanBLEcallBack = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            Log.d("<Scan For Zombeez>", "HEARD SOMETHING");
+            if(!soundEffects.isPlaying()) soundEffects.start();
+//            BluetoothDevice btDevice = result.getDevice();
+//            connectToDevice(btDevice);
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            for (ScanResult sr : results) {
+                Log.d("<Scan For Zombeez>", "HEARD A BUNCH OF THINGS");
+            }
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            Log.d("<Scan Failed>", "Error Code: " + errorCode);
+        }
+    };
+
+    private void stopBluetooh() {
+        scannerBLE.stopScan(scanBLEcallBack);
+        advertiserBLE.stopAdvertising(advertiseCallback);
+    }
+
+    private void taggedUpdateBLE() {
+        hunted = false;
+        scannerBLE.flushPendingScanResults(scanBLEcallBack);
+        scannerBLE.stopScan(scanBLEcallBack);
     }
 
 

@@ -92,13 +92,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /*===Google Map Stuff===*/
     GoogleMap map;
 
-    /* Nfc Stuff */
+    /*===Nfc Stuff===*/
     final private  int REQUEST_ENABLE_BT = 1;
     NfcAdapter mNfcAdapter;
     public static final String MIME_TYPE = "application/tag.zombie.contagion";
     boolean nfc = true;
 
-    /* Bluetooth Stuff */
+    /*===Bluetooth Stuff===*/
     boolean hunted = true;
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
@@ -181,7 +181,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             nfc = true;
         }
 
-        //Media
+        //Media to play the scream effect
         PackageManager m = getPackageManager();
         String s = getPackageName();
         try {
@@ -578,6 +578,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     };
 
+    //stops both advertising and scanning
     private void stopBluetooh() {
         scannerBLE.stopScan(scanBLEcallBack);
         advertiserBLE.stopAdvertising(advertiseCallback);

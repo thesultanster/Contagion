@@ -18,6 +18,7 @@ import com.parse.ParseException;
 import java.util.HashMap;
 
 import tag.zombie.contagion.GameActivity;
+import tag.zombie.contagion.MapPickerActivity;
 import tag.zombie.contagion.R;
 
 /**
@@ -26,7 +27,7 @@ import tag.zombie.contagion.R;
 public class NewGameActivity extends AppCompatActivity {
 
     EditText nameEditText;
-    Button createButton;
+    Button safeZoneButton;
     Context context;
 
     @Override
@@ -35,51 +36,25 @@ public class NewGameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_new_game);
 
         nameEditText = (EditText)findViewById(R.id.nameEditText);
-        createButton = (Button)findViewById(R.id.createButton);
+        safeZoneButton = (Button)findViewById(R.id.safeZoneButton);
 
-        createButton.setOnClickListener(buttonListener);
+        safeZoneButton.setOnClickListener(safeZoneButtonListener);
     }
 
-    View.OnClickListener buttonListener = new View.OnClickListener() {
+    View.OnClickListener safeZoneButtonListener = new View.OnClickListener() {
         public void onClick(View v) {
 
-            // TODO: create new game room
-            createButton.setEnabled(false);
-            Log.d("Contagion", "Create new game room.");
+            // TODO: create new safe zone
+            safeZoneButton.setEnabled(false);
+            Log.d("Contagion", "Create new safe zone.");
 
-            if (nameEditText.getText().toString().isEmpty()) {
-                // TODO: print error
-                AlertDialog alertDialog = new AlertDialog.Builder(NewGameActivity.this).create();
-                alertDialog.setTitle("Error");
-                alertDialog.setMessage("Need to enter game room name.");
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            createButton.setEnabled(true);
-                        }
-                });
-                alertDialog.show();
-            } else {
-                //CREATE NEW GAME
-                HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("gameName", nameEditText.getText().toString());
+            Bundle args = new Bundle();
+            args.putString("gameRoomName", nameEditText.getText().toString());
 
-                ParseCloud.callFunctionInBackground("newGame", params, new FunctionCallback<String>() {
-                    public void done(String response, ParseException e) {
-                        if (e == null) {
-                            Log.d("<CLOUD CODE BITCH>", response);
-                            // go to game activity
-                            Intent intent = new Intent(context, GameActivity.class);
-                            context.startActivity(intent);
-                        } else {
-                            Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: newGame");
-                            Log.d("<CLOUD CODE BITCH>", e.toString());
-                            createButton.setEnabled(true);
-                        }
-                    }
-                });
-            }
+            Intent intent = new Intent(getApplicationContext(), MapPickerActivity.class);
+            intent.putExtras(args);
+            startActivity(intent);
+            safeZoneButton.setEnabled(true);
         }
     };
 

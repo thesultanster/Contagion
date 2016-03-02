@@ -68,13 +68,13 @@
 
 
             <android.support.v7.widget.AppCompatButton
-                android:id="@+id/setMeetupLocation"
+                android:id="@+id/setSafeZone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:padding="5dp"
                 android:backgroundTint="@color/colorAccent"
-                android:text="SET MEETING LOCATION"
+                android:text="SET SAFE ZONE"
                 android:textColor="#FFFFFF" />
 
             <View
@@ -96,15 +96,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/abc_action_bar_default_height_material"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="@style/AppTheme.Dark"
-            app:layout_scrollFlags="enterAlways|enterAlwaysCollapsed" />
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/abc_action_bar_default_height_material"
+                android:background="?attr/colorPrimary"
+                android:minHeight="?attr/actionBarSize"
+                android:theme="@style/AppTheme.Dark"
+                app:layout_scrollFlags="enterAlways|enterAlwaysCollapsed" />
+
+            <Button
+                android:id="@+id/doneButton"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/abc_action_bar_default_height_material"
+                android:text="DONE"
+                android:layout_alignParentRight="true"/>
+
+        </RelativeLayout>
+
     </android.support.design.widget.AppBarLayout>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -41,6 +41,8 @@ public class LoginActivity extends AppCompatActivity {
                         Log.d("Contagion", "Anonymous login failed. " + e.getMessage());
                         playButton.setEnabled(true);
                     } else {
+                        ParseUser.getCurrentUser().put("nickname", nameEditText.getText().toString());
+                        ParseUser.getCurrentUser().saveInBackground();
                         Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
                         startActivity(intent);
                         finish();

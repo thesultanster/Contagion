@@ -188,6 +188,15 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /*===UI STUFF===*/
 
     private void inflateVariables() {
+
+        try {
+            ParseUser.getCurrentUser().fetch();
+            game = (ParseObject) ParseUser.getCurrentUser().get("gameId");
+            Log.d("Contagion","Got user's current game.");
+        } catch (ParseException e) {
+            Log.e("Contagion","ERROR: Could not get game object " + e.getMessage());
+        }
+
         // Inflate Variables
         userStateView = findViewById(R.id.userstate);
         userStateLayout = (RelativeLayout) userStateView;
@@ -281,10 +290,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void UpdateGame() {
 
-
-
         ParseQuery<ParseObject> query = new ParseQuery("Game");
-        query.whereEqualTo("objectId", "m3rnAai0Hf");
+        query.whereEqualTo("objectId", game.getObjectId());
         query.include("healthyPlayers");
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
@@ -347,7 +354,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
                     });
 
-                    Log.d("MyApp", "Game is Over!");
+                    Log.d("Contagion", "Game is Over!");
 
                     Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                     startActivity(intent);
@@ -435,7 +442,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         });
 
 
-                        Log.d("MyApp", "Anonymous user left game");
+                        Log.d("Contagion", "Anonymous user left game");
 
                         stopBluetooh();
 
@@ -461,57 +468,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // If game object exists
                 if (game != null) {
 
-                    HashMap<String, Object> params = new HashMap<String, Object>();
-                    params.put("gameId", "m3rnAai0Hf");
-
-                    ParseCloud.callFunctionInBackground("addInfected", params, new FunctionCallback<String>() {
-                        public void done(String response, ParseException e) {
-                            if (e == null) {
-                                Log.d("<CLOUD CODE BITCH>", response);
-                                if (nfc && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    if (mNfcAdapter.invokeBeam(GameActivity.this))
-                                        Log.d("<NFC BITCH>", "INITIATE BEAM...BITCH");
-                                    else
-                                        Log.d("<NFC BITCH>", "YOU DIDN'T INITIATE BEAM...YOU BITCH");
-                                }
-                            } else {
-                                Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: addInfected");
-                                Log.d("<CLOUD CODE BITCH>", e.toString());
-                            }
-                        }
-                    });
-
-                    itButton.setVisibility(view.GONE);
-
-                    userStateTextView.setText("Infected");
-                    userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
-                    heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
-                    frameAnimation = (AnimationDrawable) heartImage.getBackground();
-                    frameAnimation.start();
-
-                    taggedUpdateBLE();
-
-                    /*Before Cloud Code
-                    // Remove from healthy list
-                    List<ParseObject> healthyPlayers = game.getList("healthyPlayers");
-                    healthyPlayers.remove(ParseUser.getCurrentUser());
-                    game.put("healthyPlayers", healthyPlayers);
-                    game.saveInBackground();
-
-                    // Increment infected
-                    game.increment("infectedCount", 1);
-
-                    // Decrement healthy
-                    game.increment("healthyCount", -1);
-
-                    itButton.setVisibility(view.GONE);
-
-                    userStateTextView.setText("Infected");
-                    userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
-                    heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
-                    frameAnimation = (AnimationDrawable) heartImage.getBackground();
-                    frameAnimation.start();
-                    */
+                    addInfected(true);
                 }
             }
         });
@@ -542,44 +499,50 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             //new NdefReaderTask().execute(tag);
             if (MIME_TYPE.equals(type)) {
                 Log.d("<Contagion> NFC", "I HAVE THE RIGHT NFC MESSAGE");
-
-                //TAG THE BITCH
-                HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("gameId", "m3rnAai0Hf");
-
-                ParseCloud.callFunctionInBackground("addInfected", params, new FunctionCallback<String>() {
-                    public void done(String response, ParseException e) {
-                        if (e == null) {
-                            Log.d("<CLOUD CODE BITCH>", response);
-                            /*
-                            if (nfc) {
-                                if (mNfcAdapter.invokeBeam(GameActivity.this))
-                                    Log.d("<NFC BITCH>", "INITIATE BEAM...BITCH");
-                                else
-                                    Log.d("<NFC BITCH>", "YOU DIDN'T INITIATE BEAM...YOU BITCH");
-                            }
-                            */
-
-                        } else {
-                            Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: addInfected");
-                            Log.d("<CLOUD CODE BITCH>", e.toString());
-                        }
-                    }
-                });
-
-                itButton.setVisibility(View.GONE);
-
-                userStateTextView.setText("Infected");
-                userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
-                heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
-                frameAnimation = (AnimationDrawable) heartImage.getBackground();
-                frameAnimation.start();
-
-                taggedUpdateBLE();
+                addInfected();
             } else {
                 Log.d("<Contagion> NFC", "Wrong mime type: " + type);
             }
         }
+    }
+
+    private void addInfected() {
+        addInfected(false);
+    }
+
+    private void addInfected(final Boolean fromNFC) {
+
+        //TAG THE BITCH
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("gameId", game.getObjectId());
+
+        ParseCloud.callFunctionInBackground("addInfected", params, new FunctionCallback<String>() {
+            public void done(String response, ParseException e) {
+                if (e == null) {
+                    Log.d("<CLOUD CODE BITCH>", response);
+                    if (fromNFC && nfc && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        if (mNfcAdapter.invokeBeam(GameActivity.this))
+                            Log.d("<NFC BITCH>", "INITIATE BEAM...BITCH");
+                        else
+                            Log.d("<NFC BITCH>", "YOU DIDN'T INITIATE BEAM...YOU BITCH");
+                    }
+
+                    itButton.setVisibility(View.GONE);
+
+                    userStateTextView.setText("Infected");
+                    userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
+                    heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
+                    frameAnimation = (AnimationDrawable) heartImage.getBackground();
+                    frameAnimation.start();
+
+                    taggedUpdateBLE();
+
+                } else {
+                    Log.e("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: addInfected");
+                    Log.e("<CLOUD CODE BITCH>", e.toString());
+                }
+            }
+        });
     }
 
     //creates the NdefMessage that will be used when connecting with nfc

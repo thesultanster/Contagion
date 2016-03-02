@@ -33,6 +33,7 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
             user.save(null, {
               success: function(game) {
                 alert(user.id + " joined game " + game.id + ": " + game.get("name"));
+                response.success("<addPersonToGame> ***Added user to game*** <addPersonToGame>");
               },
               error: function(game, error) {
                 alert("Error: " + error.code + " " + error.message);
@@ -62,8 +63,6 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
 */
 Parse.Cloud.define("addInfected", function(request, response) {
 
-  //TODO: check if currentUser in save zones (geofencing) 
-
   //gets current parse user
   var user = Parse.User.current();
 
@@ -73,26 +72,47 @@ Parse.Cloud.define("addInfected", function(request, response) {
     //get user's game and check if the user is inside the game
     var query = new Parse.Query("Game");
     query.equalTo(user.gameId);
+    query.include("safeZones");
     query.containedIn("healthyPlayers",[user]);
 
     query.first({
       success: function(game) {
-
+        var isInSafeZone = false;
         // Successfully retrieved the object
+        
+        //check if currentUser in a save zone (geofencing) 
+        var userLocation = user.get("location");
+        var safeZones = game.get("safeZones");
+        if (safeZones && userLocation) {
+          for (var i = 0; i < safeZones.length; ++i) {
+            var safeZone = safeZones[i];
+            var geoPoint = safeZone.get("location");
+            var radius = safeZone.get("radius");
+            if (geoPoint.milesTo(userLocation) < radius) {
+              // user is inside safe zone 
+              isInSafeZone = true;
+              break;
+            }
+          }
+        }
 
-        //decrement game stats
-        game.increment("healthyCount", -1);
-        game.increment("infectedCount", 1);
+        if (!isInSafeZone) {
+          //decrement game stats
+          game.increment("healthyCount", -1);
+          game.increment("infectedCount", 1);
 
-        //remove user from healthy players
-        game.remove("healthyPlayers", user);
-        game.save();
+          //remove user from healthy players
+          game.remove("healthyPlayers", user);
+          game.save();
 
-        //set user status to infected
-        user.set("status", "infected");
-        user.save();
+          //set user status to infected
+          user.set("status", "infected");
+          user.save();
 
-        response.success("<addInfected> ***I became the It*** <addInfected>");
+          response.success("<addInfected> ***I became the It*** <addInfected>");
+        } else {
+          response.error("<addInfected> ***User is in safe zone*** <addInfected>");
+        }
       },
       error: function(error) {
         alert("Error: " + error.code + " " + error.message);
@@ -178,7 +198,8 @@ Parse.Cloud.define("newGame", function(request, response) {
 
       Parse.Cloud.run('addPersonToGame', { gameId: game.id }, {
         success: function(success) {
-          response.success("<newGame> ***Created new game!\t " + game.id + ": " + request.params.gameName + "*** <newGame>");
+          //response.success("<newGame> ***Created new game!\t " + game.id + ": " + request.params.gameName + "*** <newGame>");
+          response.success(game);
         },
         error: function(error) {
           alert("Error: " + error.code + " " + error.message);

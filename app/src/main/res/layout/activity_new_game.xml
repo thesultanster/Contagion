@@ -26,11 +26,11 @@
                 android:hint="Game Room Name"/>
 
             <Button
-                android:id="@+id/createButton"
+                android:id="@+id/safeZoneButton"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Create Game Room"
-                android:background="@color/colorPrimary"
+                android:text="NEXT"
+                android:background="@color/colorAccent"
                 android:textColor="#FFFFFF"/>
 
         </LinearLayout>

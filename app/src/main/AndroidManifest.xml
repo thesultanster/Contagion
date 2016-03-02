@@ -28,6 +28,7 @@ package="tag.zombie.contagion">
     </activity>
 
     <activity android:name=".NewGameActivity.NewGameActivity"></activity>
+    <activity android:name=".MapPickerActivity"></activity>
 
     <activity android:name=".GameActivity" >
         <intent-filter>
@@ -46,7 +47,6 @@ package="tag.zombie.contagion">
     <activity android:name=".LobbyActivity" />
 
     <activity android:name=".GameListActivity"></activity>
-        <activity android:name=".MapPickerActivity"></activity>
 
     <meta-data android:name="com.parse.APPLICATION_ID" android:value="qDJoHUCRe1fEjAW4812QBJkP7l2hiXfliOhuq8p0" />
     <meta-data android:name="com.parse.CLIENT_KEY" android:value="SeFxOyOeapDOf0PlB25VjaozeR4xMQQzWadhXTen" />

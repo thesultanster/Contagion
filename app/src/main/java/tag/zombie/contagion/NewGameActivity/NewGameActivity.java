@@ -52,6 +52,7 @@ public class NewGameActivity extends AppCompatActivity {
             args.putString("gameRoomName", nameEditText.getText().toString());
 
             Intent intent = new Intent(getApplicationContext(), MapPickerActivity.class);
+//            Intent intent = new Intent(getApplicationContext(), NewGameSafeZonesListActivity.class);
             intent.putExtras(args);
             startActivity(intent);
             safeZoneButton.setEnabled(true);

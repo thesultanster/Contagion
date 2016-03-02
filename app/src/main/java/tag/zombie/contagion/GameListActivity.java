@@ -57,8 +57,8 @@ public class GameListActivity extends AppCompatActivity{
             addButton.setEnabled(false);
             Intent intent = new Intent(getApplicationContext(), NewGameActivity.class);
             startActivity(intent);
+            addButton.setEnabled(true);
             Log.d("Contagion", "Going to create new game room.");
-
         }
     };
 

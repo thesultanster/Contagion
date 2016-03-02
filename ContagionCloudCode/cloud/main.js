@@ -1,6 +1,7 @@
 /* addPersonToGame
-    input: gameID  -   game objectid (passed in as a string)
-    output: current user is added to the game, and a success string is passed back
+    input:  gameID  -   game objectid (passed in as a string)
+    output: success message
+    result: current user is added to the game, and a success string is passed back
 */
 Parse.Cloud.define("addPersonToGame", function(request, response) {
 
@@ -12,24 +13,40 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
   query.equalTo("objectId", gameId);
 
   query.first({
-    success: function(post) {
+    success: function(game) {
 
       // Successfully retrieved the object.
 
       //Adding user to the game
-      if( (post.get("players")).indexOf(user) < 0 ) {
-        post.addUnique("players", user);
-        post.addUnique("healthyPlayers", user);
-        post.increment("healthyCount");
-        post.save();
+      if( (game.get("players")).indexOf(user) < 0 ) {
+        game.addUnique("players", user);
+        game.addUnique("healthyPlayers", user);
+        game.increment("healthyCount");
+
+        game.save(null, {
+          success: function(game) {
+            alert("added user to game list " + game.id + ": " + game.get("name"));
+
+            //set user status to healthy and gameId to Pointer to game
+            user.set("status", "healthy");
+            user.set("gameId", game);
+            user.save(null, {
+              success: function(game) {
+                alert(user.id + " joined game " + game.id + ": " + game.get("name"));
+              },
+              error: function(game, error) {
+                alert("Error: " + error.code + " " + error.message);
+                response.error("<ERROR> <addPersonToGame> ***Could not create new game*** <addPersonToGame> <ERROR>");
+              }
+            });
+          },
+          error: function(game, error) {
+            alert("Error: " + error.code + " " + error.message);
+            response.error("<ERROR> <addPersonToGame> ***Did not add user to game*** <addPersonToGame> <ERROR>");
+          }
+        });
+
       }
-
-      //set user status to healthy and gameId to Pointer to post
-      user.set("status", "healthy");
-      user.set("gameId", post.toPointer());
-      user.save();
-
-      response.success("<addPersonToGame> ***Added Player to the Game!\t " + gameId + "*** <addPersonToGame>");
     },
     error: function(error) {
       alert("Error: " + error.code + " " + error.message);
@@ -39,8 +56,9 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
 });
 
 /* addInfected
-    input: gameId - (string) game objectid of the game the user is currently in
-    output: current user is put on the Infected list, and a success string is passed back
+    input:  gameId - (string) game objectid of the game the user is currently in
+    output: success message
+    result: current user is put on the Infected list, and a success string is passed back
 */
 Parse.Cloud.define("addInfected", function(request, response) {
 
@@ -86,8 +104,9 @@ Parse.Cloud.define("addInfected", function(request, response) {
 
 
 /* leaveGame
-    input: nothing
+    input:  nothing
     output: success message
+    result: current user leaves the game, updates the number of healthy and infected
 */
 Parse.Cloud.define("leaveGame", function(request,response) {
 
@@ -134,8 +153,9 @@ Parse.Cloud.define("leaveGame", function(request,response) {
 
 
 /* newGame
-    input: gameName  -   game room name (passed in as a string)
-    output: current user is added to the game, and a success string is passed back
+    input:  gameName  -   game room name (passed in as a string)
+    output: success message 
+    result: current user is added to the game, and a success string is passed back
 */
 Parse.Cloud.define("newGame", function(request, response) {
 

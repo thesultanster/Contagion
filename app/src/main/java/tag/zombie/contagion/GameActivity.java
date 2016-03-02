@@ -53,6 +53,7 @@ import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -252,6 +253,27 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 healthyPlayers.setText(game.getInt("healthyCount") + "");
                 infectedPlayers.setText(game.getInt("infectedCount") + "");
 
+
+                if(map != null) {
+                    map.clear();
+
+                    // If user is healthy
+                    if (ParseUser.getCurrentUser().getString("status").equals("healthy")) {
+
+                        List<ParseUser> users = game.getList("healthyPlayers");
+
+                        for (ParseUser user : users) {
+                            map.addMarker(new MarkerOptions()
+                                    .position(new LatLng(user.getParseGeoPoint("location").getLongitude(), user.getParseGeoPoint("location").getLatitude()))
+                                    .title("Healthy Player"));
+                        }
+
+                    } else if (ParseUser.getCurrentUser().getString("status").equals("infected")) {
+
+                    }
+                }
+
+
                 if (game.getInt("healthyCount") == 0) {
 
                     listenerThread.stahp();
@@ -292,7 +314,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void run() {
             try {
                 while (!isInterrupted()) {
-                    Thread.sleep(200);
+                    Thread.sleep(2000);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -451,15 +473,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap map) {
-        LatLng sydney = new LatLng(-33.867, 151.206);
-
         map.setMyLocationEnabled(true);
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
-
-        map.addMarker(new MarkerOptions()
-                .title("Sydney")
-                .snippet("The most populous city in Australia.")
-                .position(sydney));
     }
 
     /*===NFC Stuff===*/

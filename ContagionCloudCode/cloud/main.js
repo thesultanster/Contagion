@@ -146,11 +146,16 @@ Parse.Cloud.define("newGame", function(request, response) {
 
   var Game = Parse.Object.extend("Game");
   var game = new Game();
-  game.gameName = request.params.gameName;
+  game.set("name", request.params.gameName);
+  game.set("players", []);
+  game.set("healthyPlayers", []);
+  game.set("healthyCount", 0);
+  game.set("infectedCount", 0);
+  game.set("gameState", 0);
   game.save(null, {
     success: function(game) {
-      alert("newGame created " + gameId);
-      response.success("<newGame> ***Created new game!\t " + gameId + "*** <newGame>");
+      alert("newGame created " + game.id + ": " + request.params.gameName);
+      response.success("<newGame> ***Created new game!\t " + game.id + ": " + request.params.gameName + "*** <newGame>");
     },
     error: function(game, error) {
       alert("Error: " + error.code + " " + error.message);

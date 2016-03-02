@@ -260,7 +260,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                 if (map != null) {
-                    //map.clear();
+                    map.clear();
 
 
 
@@ -272,7 +272,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Log.d("user query", String.valueOf(objects.size()));
                             for (ParseUser user : objects) {
                                 map.addMarker(new MarkerOptions()
-                                        .position(new LatLng(user.getParseGeoPoint("location").getLongitude(), user.getParseGeoPoint("location").getLatitude()))
+                                        .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
                                         .title("Healthy Player"));
 
                                 Log.d("map", "added marker");

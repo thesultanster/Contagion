@@ -72,15 +72,14 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
                     public void done(String response, ParseException e) {
                         if (e == null) {
                             Log.d("<CLOUD CODE BITCH>", response);
+                            Intent intent = new Intent(context, GameActivity.class);
+                            context.startActivity(intent);
                         } else {
                             Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
                             Log.d("<CLOUD CODE BITCH>", e.toString());
                         }
                     }
                 });
-
-                Intent intent = new Intent(context, GameActivity.class);
-                context.startActivity(intent);
 
             }
 

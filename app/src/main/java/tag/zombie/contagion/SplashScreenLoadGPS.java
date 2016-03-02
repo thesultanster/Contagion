@@ -63,7 +63,6 @@ public class SplashScreenLoadGPS extends AppCompatActivity {
                 public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
                     fallbackLocationTracker.stop();
                     TerminateSplashScreen(newLoc);
-                    // Go to activity
                 }
             });
 

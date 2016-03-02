@@ -1,4 +1,4 @@
-package tag.zombie.contagion;
+package tag.zombie.contagion.NewGameActivity;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -16,6 +16,9 @@ import com.parse.ParseCloud;
 import com.parse.ParseException;
 
 import java.util.HashMap;
+
+import tag.zombie.contagion.GameActivity;
+import tag.zombie.contagion.R;
 
 /**
  * Created by Leia on 3/1/16.

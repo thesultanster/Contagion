@@ -18,6 +18,7 @@ import android.graphics.drawable.AnimationDrawable;
 import android.location.Location;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.ParcelUuid;
 import android.provider.Settings;
@@ -228,27 +229,35 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         //Bluetooth
-        bluetoothManager = (BluetoothManager) getSystemService(GameActivity.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
-        // Ensures Bluetooth is available on the device and it is enabled. If not,
-        // displays a dialog requesting user permission to enable Bluetooth.
-        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            bluetoothManager = (BluetoothManager) getSystemService(GameActivity.BLUETOOTH_SERVICE);
+            mBluetoothAdapter = bluetoothManager.getAdapter();
+            // Ensures Bluetooth is available on the device and it is enabled. If not,
+            // displays a dialog requesting user permission to enable Bluetooth.
+            if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+
+            //ParcelUid to put into AdvertiseData
+            ParcelUuid acceptableUuid = new ParcelUuid(UUID.fromString(totallyLegitUuid));
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                advertiserBLE = mBluetoothAdapter.getBluetoothLeAdvertiser();
+                advertiseData = new AdvertiseData.Builder().addServiceUuid(acceptableUuid).build();
+                advertiseSettings = new AdvertiseSettings.Builder().setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW).setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY).build();
+
+                scannerBLE = mBluetoothAdapter.getBluetoothLeScanner();
+                scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build();
+                ScanFilter temp = new ScanFilter.Builder().setServiceUuid(acceptableUuid).build();
+                scanFilters = new ArrayList<ScanFilter>();
+                scanFilters.add(temp);
+
+                initializeBluetoothCallback();
+            }
+
         }
 
-        //ParcelUid to put into AdvertiseData
-        ParcelUuid acceptableUuid = new ParcelUuid(UUID.fromString(totallyLegitUuid));
-
-        advertiserBLE = mBluetoothAdapter.getBluetoothLeAdvertiser();
-        advertiseData = new AdvertiseData.Builder().addServiceUuid(acceptableUuid).build();
-        advertiseSettings = new AdvertiseSettings.Builder().setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW).setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY).build();
-
-        scannerBLE = mBluetoothAdapter.getBluetoothLeScanner();
-        scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build();
-        ScanFilter temp = new ScanFilter.Builder().setServiceUuid(acceptableUuid).build();
-        scanFilters = new ArrayList<ScanFilter>();
-        scanFilters.add(temp);
     }
 
     /*===Makes the Heart beat==*/
@@ -459,7 +468,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         public void done(String response, ParseException e) {
                             if (e == null) {
                                 Log.d("<CLOUD CODE BITCH>", response);
-                                if (nfc) {
+                                if (nfc && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                     if (mNfcAdapter.invokeBeam(GameActivity.this))
                                         Log.d("<NFC BITCH>", "INITIATE BEAM...BITCH");
                                     else
@@ -585,65 +594,82 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /*===Bluetooth Stuff===*/
     public void bluetoothUpdate() {
-        //BLE Scan for zombies
-        if (hunted) {
-            //healthy people code
-            Log.d("<Game Update>", "Still running from them damn zombeez :(");
-            scannerBLE.stopScan(scanBLEcallBack);
-            scannerBLE.startScan(scanFilters, scanSettings, scanBLEcallBack);
-        } else {
-            //zombie people code
-            Log.d("<GAME Update>", "GET DEM BRAINZ");
-            advertiserBLE.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            //BLE Scan for zombies
+            if (hunted) {
+                //healthy people code
+                Log.d("<Game Update>", "Still running from them damn zombeez :(");
+                scannerBLE.stopScan(scanBLEcallBack);
+                scannerBLE.startScan(scanFilters, scanSettings, scanBLEcallBack);
+
+            } else {
+                //zombie people code
+                Log.d("<GAME Update>", "GET DEM BRAINZ");
+                advertiserBLE.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
+            }
         }
     }
 
-    public AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
-        @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            Log.d("<Bluetooth Advertising>", "I AM A ZOMBEE");
-//            super.onStartSuccess(settingsInEffect);
+    public AdvertiseCallback advertiseCallback;
+    public ScanCallback scanBLEcallBack;
+
+    private void initializeBluetoothCallback() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            advertiseCallback = new AdvertiseCallback() {
+                @Override
+                public void onStartSuccess(AdvertiseSettings settingsInEffect) {
+                    Log.d("<Bluetooth Advertising>", "I AM A ZOMBEE");
+    //            super.onStartSuccess(settingsInEffect);
+                }
+
+                @Override
+                public void onStartFailure(int errorCode) {
+                    Log.d("<Bluetooth Advertising>", "IT'S NOT WORKING:");
+                    super.onStartFailure(errorCode);
+                }
+            };
         }
 
-        @Override
-        public void onStartFailure(int errorCode) {
-            Log.d("<Bluetooth Advertising>", "IT'S NOT WORKING:");
-            super.onStartFailure(errorCode);
-        }
-    };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            scanBLEcallBack = new ScanCallback() {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result) {
+                    Log.d("<Scan For Zombeez>", "HEARD SOMETHING");
+                    if (!soundEffects.isPlaying()) soundEffects.start();
+    //            BluetoothDevice btDevice = result.getDevice();
+    //            connectToDevice(btDevice);
+                }
 
-    public ScanCallback scanBLEcallBack = new ScanCallback() {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            Log.d("<Scan For Zombeez>", "HEARD SOMETHING");
-            if (!soundEffects.isPlaying()) soundEffects.start();
-//            BluetoothDevice btDevice = result.getDevice();
-//            connectToDevice(btDevice);
-        }
+                @Override
+                public void onBatchScanResults(List<ScanResult> results) {
+                    for (ScanResult sr : results) {
+                        Log.d("<Scan For Zombeez>", "HEARD A BUNCH OF THINGS");
+                    }
+                }
 
-        @Override
-        public void onBatchScanResults(List<ScanResult> results) {
-            for (ScanResult sr : results) {
-                Log.d("<Scan For Zombeez>", "HEARD A BUNCH OF THINGS");
-            }
+                @Override
+                public void onScanFailed(int errorCode) {
+                    Log.d("<Scan Failed>", "Error Code: " + errorCode);
+                }
+            };
         }
-
-        @Override
-        public void onScanFailed(int errorCode) {
-            Log.d("<Scan Failed>", "Error Code: " + errorCode);
-        }
-    };
+    }
 
     //stops both advertising and scanning
     private void stopBluetooh() {
-        scannerBLE.stopScan(scanBLEcallBack);
-        advertiserBLE.stopAdvertising(advertiseCallback);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            scannerBLE.stopScan(scanBLEcallBack);
+            advertiserBLE.stopAdvertising(advertiseCallback);
+        }
     }
 
     private void taggedUpdateBLE() {
         hunted = false;
-        scannerBLE.flushPendingScanResults(scanBLEcallBack);
-        scannerBLE.stopScan(scanBLEcallBack);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            scannerBLE.flushPendingScanResults(scanBLEcallBack);
+            scannerBLE.stopScan(scanBLEcallBack);
+        }
     }
 
 

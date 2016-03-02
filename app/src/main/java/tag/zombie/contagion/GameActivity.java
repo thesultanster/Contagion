@@ -15,6 +15,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.location.Location;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
@@ -43,6 +44,7 @@ import android.bluetooth.le.ScanCallback;
 
 import android.media.MediaPlayer;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -68,6 +70,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.UUID;
 import java.util.logging.ErrorManager;
+
+import tag.zombie.contagion.Util.FallbackLocationTracker;
+import tag.zombie.contagion.Util.LocationTracker;
 
 public class GameActivity extends AppCompatActivity implements OnMapReadyCallback, CreateNdefMessageCallback {
 
@@ -115,6 +120,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<ScanFilter> scanFilters;
     private String totallyLegitUuid = "38494638-8cf0-11bd-b23e-10b96e4ef00d";
 
+    FallbackLocationTracker fallbackLocationTracker;
+
     /*===onCreate===*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,6 +148,27 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         //sets the NdefMessage to push during beam
         if (nfc) mNfcAdapter.setNdefPushMessageCallback(this, this);
+
+
+
+        // Start Location Tracker
+        fallbackLocationTracker = new FallbackLocationTracker(this);
+
+        if (fallbackLocationTracker != null) {
+
+            // Then find fine location
+            fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
+                @Override
+                public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
+                    //fallbackLocationTracker.stop();
+                    ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
+                    ParseUser.getCurrentUser().saveInBackground();
+                    // Go to activity
+                }
+            });
+
+        }
+
     }
 
     /*===Start of Activity===*/
@@ -262,32 +290,33 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (map != null) {
                     map.clear();
 
-
-
                     ParseQuery<ParseUser> innerQuery = new ParseQuery<ParseUser>("_User");
+                    innerQuery.whereEqualTo("gameId",game);
+                    innerQuery.whereNotEqualTo("objectId",ParseUser.getCurrentUser().getObjectId());
                     innerQuery.findInBackground(new FindCallback<ParseUser>() {
                         @Override
                         public void done(List<ParseUser> objects, ParseException e) {
 
                             Log.d("user query", String.valueOf(objects.size()));
                             for (ParseUser user : objects) {
-                                map.addMarker(new MarkerOptions()
-                                        .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
-                                        .title("Healthy Player"));
 
-                                Log.d("map", "added marker");
+
+                                // If user is healthy
+                                if (ParseUser.getCurrentUser().getString("status").equals("healthy")) {
+                                    map.addMarker(new MarkerOptions()
+                                            .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
+                                            .title("Healthy Player"));
+
+
+                                } else if (ParseUser.getCurrentUser().getString("status").equals("infected")) {
+
+                                }
+
                             }
                         }
                     });
 
-                    // If user is healthy
-                    if (ParseUser.getCurrentUser().getString("status").equals("healthy")) {
 
-
-
-                    } else if (ParseUser.getCurrentUser().getString("status").equals("infected")) {
-
-                    }
                 }
 
 
@@ -326,7 +355,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onStop() {
         super.onStop();
-        quitButton.performClick();
+        fallbackLocationTracker.stop();
+        //quitButton.performClick();
     }
 
     class WorkerThread extends Thread {
@@ -336,7 +366,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         public void run() {
             try {
                 while (!isInterrupted()) {
-                    Thread.sleep(2000);
+                    Thread.sleep(3000);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -485,7 +515,9 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap map) {
         this.map = map;
         map.setMyLocationEnabled(true);
-    }
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(new LatLng(ParseUser.getCurrentUser().getParseGeoPoint("location").getLatitude()
+                                                                        , ParseUser.getCurrentUser().getParseGeoPoint("location").getLongitude()), 15);
+        map.animateCamera(cameraUpdate);    }
 
     /*===NFC Stuff===*/
 

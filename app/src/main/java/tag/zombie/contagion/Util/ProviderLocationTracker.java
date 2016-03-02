@@ -12,10 +12,10 @@ import android.os.Bundle;
 public class ProviderLocationTracker implements LocationListener, LocationTracker {
 
     // The minimum distance to change Updates in millimeters
-    private long MIN_UPDATE_DISTANCE = 10000;
+    private long MIN_UPDATE_DISTANCE = 0;
 
     // The minimum time between updates in milliseconds
-    private long MIN_UPDATE_TIME = 400000;
+    private long MIN_UPDATE_TIME = 3000;
 
     private LocationManager lm;
 

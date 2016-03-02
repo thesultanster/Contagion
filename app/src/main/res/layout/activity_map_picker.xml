@@ -75,7 +75,7 @@
                 android:padding="5dp"
                 android:backgroundTint="@color/colorAccent"
                 android:text="SET SAFE ZONE"
-                android:textColor="#FFFFFF" />
+                android:textColor="@color/white" />
 
             <View
                 android:layout_width="match_parent"
@@ -114,6 +114,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="@dimen/abc_action_bar_default_height_material"
                 android:text="DONE"
+                android:textColor="@color/white"
+                android:background="@null"
                 android:layout_alignParentRight="true"/>
 
         </RelativeLayout>

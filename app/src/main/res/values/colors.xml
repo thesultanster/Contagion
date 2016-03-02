@@ -15,5 +15,7 @@
     <color name="timerbar">#16a085</color>
     <color name="zombienotification">#f1c40f</color>
 
+    <color name="white">#ffffff</color>
+
 
 </resources>

@@ -139,11 +139,14 @@ Parse.Cloud.define("leaveGame", function(request,response) {
 */
 Parse.Cloud.define("newGame", function(request, response) {
 
+  if (!request.params.gameName) {
+    alert("Error: newGame needs game name");
+    response.error(" <ERROR> <newGame> ***Need game room name to create game*** <newGame> <ERROR>");
+  }
+
   var Game = Parse.Object.extend("Game");
   var game = new Game();
-  if (request.params.gameName) {
-    game.gameName = request.params.gameName;
-  }
+  game.gameName = request.params.gameName;
   game.save(null, {
     success: function(game) {
       alert("newGame created " + gameId);
@@ -151,7 +154,7 @@ Parse.Cloud.define("newGame", function(request, response) {
     },
     error: function(game, error) {
       alert("Error: " + error.code + " " + error.message);
-      response.error(" <ERROR> <newGame> ***Could not create new game*** <newGame> <ERROR>");
+      response.error("<ERROR> <newGame> ***Could not create new game*** <newGame> <ERROR>");
     }
   });
 

@@ -17,10 +17,12 @@ Parse.Cloud.define("addPersonToGame", function(request, response) {
       // Successfully retrieved the object.
 
       //Adding user to the game
-      post.addUnique("players", user);
-      post.addUnique("healthyPlayers", user);
-      post.increment("healthyCount");
-      post.save();
+      if( (post.get("players")).indexOf(user) < 0 ) {
+        post.addUnique("players", user);
+        post.addUnique("healthyPlayers", user);
+        post.increment("healthyCount");
+        post.save();
+      }
 
       //set user status to healthy and gameId to Pointer to post
       user.set("status", "healthy");
@@ -47,33 +49,39 @@ Parse.Cloud.define("addInfected", function(request, response) {
   //gets current parse user
   var user = Parse.User.current();
 
-  var query = new Parse.Query("Game");
-  query.equalTo(user.gameId);
+  //Only addInfected if the user is not already an infected
+  if (user.get("status") != "infected") {
 
-  query.first({
-    success: function(game) {
+    //get user's game and check if the user is inside the game
+    var query = new Parse.Query("Game");
+    query.equalTo(user.gameId);
+    query.containedIn("healthyPlayers",[user]);
 
-      // Successfully retrieved the object
+    query.first({
+      success: function(game) {
 
-      //decrement game healthyCount
-      game.increment("healthyCount", -1);
-      game.increment("infectedCount");
+        // Successfully retrieved the object
 
-      //remove user from healthy players
-      game.remove("healthyPlayers", user);
-      game.save();
+        //decrement game stats
+        game.increment("healthyCount", -1);
+        game.increment("infectedCount", 1);
 
-      //set user status to infected
-      user.set("status", "infected");
-      user.save();
+        //remove user from healthy players
+        game.remove("healthyPlayers", user);
+        game.save();
 
-      response.success("<addInfected> ***I became the It*** <addInfected>");
-    },
-    error: function(error) {
-      alert("Error: " + error.code + " " + error.message);
-      response.error(" <ERROR> <addInfected> ***Could not find game*** <addInfected> <ERROR>");
-    }
-  });
+        //set user status to infected
+        user.set("status", "infected");
+        user.save();
+
+        response.success("<addInfected> ***I became the It*** <addInfected>");
+      },
+      error: function(error) {
+        alert("Error: " + error.code + " " + error.message);
+        response.error(" <ERROR> <addInfected> ***Could not find game*** <addInfected> <ERROR>");
+      }
+    });
+  }
 });
 
 
@@ -86,9 +94,10 @@ Parse.Cloud.define("leaveGame", function(request,response) {
   //gets current parse user
   var user = Parse.User.current();
 
-
+  //get user's game and check if the user is inside the game
   var query = new Parse.Query("Game");
   query.equalTo(user.gameId);
+  query.containedIn("players",[user]);
 
   query.first({
     success: function(game) {
@@ -122,6 +131,7 @@ Parse.Cloud.define("leaveGame", function(request,response) {
   });
 
 });
+
 
 /* newGame
     input: gameName  -   game room name (passed in as a string)

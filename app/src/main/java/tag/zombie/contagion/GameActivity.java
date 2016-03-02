@@ -50,6 +50,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.FindCallback;
@@ -157,27 +159,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Start Location Tracker
         fallbackLocationTracker = new FallbackLocationTracker(this);
 
-        if (fallbackLocationTracker != null) {
 
-            // Then find fine location
-            fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
-                @Override
-                public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
-                    //fallbackLocationTracker.stop();
-                    ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
-                    ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            Log.d("on update", "got newLoc");
-                        }
-                    });
-
-
-
-                }
-            });
-
-        }
 
     }
 
@@ -209,6 +191,33 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (Exception e) {
             Log.e("Contagion","ERROR: Could not get game object " + e.getMessage());
         }
+
+        if (fallbackLocationTracker != null) {
+
+            // Then find fine location
+            fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
+                @Override
+                public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
+                    //fallbackLocationTracker.stop();
+                    ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
+                    ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            Log.d("on update", "got newLoc");
+                        }
+                    });
+
+                }
+            });
+
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        fallbackLocationTracker.stop();
     }
 
     /*===UI STUFF===*/
@@ -315,6 +324,25 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
 
+
+
+        // Then find fine location
+        fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
+            @Override
+            public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
+                //fallbackLocationTracker.stop();
+                ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
+                ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        Log.d("on update", "got newLoc");
+                    }
+                });
+
+            }
+        });
+
+
         ParseQuery<ParseObject> query = new ParseQuery("Game");
         query.whereEqualTo("objectId", game.getObjectId());
         query.include("healthyPlayers");
@@ -350,7 +378,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                                 } else if (user.getString("status").equals("infected")) {
-
+                                    BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.zombie_icon);
+                                    map.addMarker(new MarkerOptions()
+                                            .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
+                                            .title("Zombie")
+                                            .icon(icon));
                                 }
 
                             }

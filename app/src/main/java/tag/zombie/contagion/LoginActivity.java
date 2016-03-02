@@ -41,7 +41,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.d("Contagion", "Anonymous login failed.");
                 playButton.setEnabled(true);
             } else {
-                Intent intent = new Intent(getApplicationContext(), GameListActivity.class);
+                Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
                 startActivity(intent);
                 finish();
                 Log.d("Contagion", "Anonymous user logged in.");

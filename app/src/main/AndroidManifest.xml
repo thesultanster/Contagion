@@ -20,10 +20,7 @@ package="tag.zombie.contagion">
     </activity>
 
     <activity android:name=".LoginActivity">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+
     </activity>
 
     <activity android:name=".NewGameActivity"></activity>
@@ -35,6 +32,16 @@ package="tag.zombie.contagion">
             <data android:mimeType="application/tag.zombie.contagion" />
         </intent-filter>
     </activity>
+
+        <activity
+            android:name=".SplashScreenLoadGPS"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
     <activity android:name=".LobbyActivity" />
 

@@ -58,6 +58,8 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -67,7 +69,7 @@ import java.util.ListIterator;
 import java.util.UUID;
 import java.util.logging.ErrorManager;
 
-public class GameActivity extends AppCompatActivity implements OnMapReadyCallback, CreateNdefMessageCallback{
+public class GameActivity extends AppCompatActivity implements OnMapReadyCallback, CreateNdefMessageCallback {
 
     /*===Parse Stuff===*/
     ParseObject game;
@@ -94,7 +96,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     GoogleMap map;
 
     /*===Nfc Stuff===*/
-    final private  int REQUEST_ENABLE_BT = 1;
+    final private int REQUEST_ENABLE_BT = 1;
     NfcAdapter mNfcAdapter;
     public static final String MIME_TYPE = "application/tag.zombie.contagion";
     boolean nfc = true;
@@ -138,7 +140,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             handleIntent(getIntent());
         }
         //sets the NdefMessage to push during beam
-        if(nfc)  mNfcAdapter.setNdefPushMessageCallback(this,this);
+        if (nfc) mNfcAdapter.setNdefPushMessageCallback(this, this);
     }
 
     /*===Start of Activity===*/
@@ -192,7 +194,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
         screamEffect = Uri.parse(s + "/scream.mp3");
-        soundEffects = MediaPlayer.create(this,R.raw.scream);
+        soundEffects = MediaPlayer.create(this, R.raw.scream);
         soundEffects.setLooping(false);
 //        soundEffects.start();
 
@@ -242,8 +244,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void UpdateGame() {
 
+
+
         ParseQuery<ParseObject> query = new ParseQuery("Game");
         query.whereEqualTo("objectId", "m3rnAai0Hf");
+        query.include("healthyPlayers");
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
@@ -254,19 +259,32 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 infectedPlayers.setText(game.getInt("infectedCount") + "");
 
 
-                if(map != null) {
+                if (map != null) {
                     map.clear();
+
+
+
+                    ParseQuery<ParseUser> innerQuery = new ParseQuery<ParseUser>("_User");
+                    innerQuery.whereEqualTo("game", game);
+                    innerQuery.findInBackground(new FindCallback<ParseUser>() {
+                        @Override
+                        public void done(List<ParseUser> objects, ParseException e) {
+
+                            Log.d("user query", "done");
+                            for (ParseUser user : objects) {
+                                map.addMarker(new MarkerOptions()
+                                        .position(new LatLng(user.getParseGeoPoint("location").getLongitude(), user.getParseGeoPoint("location").getLatitude()))
+                                        .title("Healthy Player"));
+
+                                Log.d("map", "added marker");
+                            }
+                        }
+                    });
 
                     // If user is healthy
                     if (ParseUser.getCurrentUser().getString("status").equals("healthy")) {
 
-                        List<ParseUser> users = game.getList("healthyPlayers");
 
-                        for (ParseUser user : users) {
-                            map.addMarker(new MarkerOptions()
-                                    .position(new LatLng(user.getParseGeoPoint("location").getLongitude(), user.getParseGeoPoint("location").getLatitude()))
-                                    .title("Healthy Player"));
-                        }
 
                     } else if (ParseUser.getCurrentUser().getString("status").equals("infected")) {
 
@@ -306,6 +324,11 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         bluetoothUpdate();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        quitButton.performClick();
+    }
 
     class WorkerThread extends Thread {
         volatile boolean running = true;
@@ -318,13 +341,13 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if(running)
+                            if (running)
                                 UpdateGame();
                         }
                     });
                 }
 
-                if(isInterrupted()){
+                if (isInterrupted()) {
                     return;
                 }
 
@@ -358,7 +381,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void done(List<ParseObject> objects, ParseException e) {
 
-
                         HashMap<String, Object> params = new HashMap<String, Object>();
 
                         ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
@@ -383,18 +405,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                         startActivity(intent);
                         finish();
 
-                        /* Before CloudCode
-                        // remove user to array of players
-                        List<ParseObject> players = objects.get(0).getList("players");
-                        players.remove(ParseUser.getCurrentUser());
-                        objects.get(0).put("players", players);
-                        objects.get(0).saveInBackground();
-                        objects.get(0).increment("healthyCount", -1);
-                        objects.get(0).saveInBackground();
-                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        startActivity(intent);
-                        Log.d("MyApp", "Anonymous user logged in.");
-                       */
+
                     }
 
 
@@ -473,6 +484,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(GoogleMap map) {
+        this.map = map;
         map.setMyLocationEnabled(true);
     }
 
@@ -535,7 +547,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public NdefMessage createNdefMessage(NfcEvent event) {
         String text = ("Tag YAH BIATCH!");
         NdefMessage msg = new NdefMessage(
-                new NdefRecord[] { NdefRecord.createMime(MIME_TYPE, text.getBytes()) }
+                new NdefRecord[]{NdefRecord.createMime(MIME_TYPE, text.getBytes())}
         );
         return msg;
     }
@@ -543,16 +555,15 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     /*===Bluetooth Stuff===*/
     public void bluetoothUpdate() {
         //BLE Scan for zombies
-        if(hunted) {
+        if (hunted) {
             //healthy people code
             Log.d("<Game Update>", "Still running from them damn zombeez :(");
             scannerBLE.stopScan(scanBLEcallBack);
-            scannerBLE.startScan(scanFilters,scanSettings,scanBLEcallBack);
-        }
-        else {
+            scannerBLE.startScan(scanFilters, scanSettings, scanBLEcallBack);
+        } else {
             //zombie people code
             Log.d("<GAME Update>", "GET DEM BRAINZ");
-            advertiserBLE.startAdvertising(advertiseSettings,advertiseData,advertiseCallback);
+            advertiserBLE.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
         }
     }
 
@@ -574,7 +585,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             Log.d("<Scan For Zombeez>", "HEARD SOMETHING");
-            if(!soundEffects.isPlaying()) soundEffects.start();
+            if (!soundEffects.isPlaying()) soundEffects.start();
 //            BluetoothDevice btDevice = result.getDevice();
 //            connectToDevice(btDevice);
         }

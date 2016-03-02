@@ -32,24 +32,22 @@ public class LoginActivity extends AppCompatActivity {
     View.OnClickListener buttonListener = new View.OnClickListener() {
         public void onClick(View v) {
 
-
-
-        Log.d("Contagion", "Logging in anonymous user.");
-        playButton.setEnabled(false);
-        ParseAnonymousUtils.logIn(new LogInCallback() {
-            @Override
-            public void done(ParseUser user, ParseException e) {
-            if (e != null) {
-                Log.d("Contagion", "Anonymous login failed.");
-                playButton.setEnabled(true);
-            } else {
-                Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
-                startActivity(intent);
-                finish();
-                Log.d("Contagion", "Anonymous user logged in.");
-            }
-            }
-        });
+            Log.d("Contagion", "Logging in anonymous user.");
+            playButton.setEnabled(false);
+            ParseAnonymousUtils.logIn(new LogInCallback() {
+                @Override
+                public void done(ParseUser user, ParseException e) {
+                    if (e != null) {
+                        Log.d("Contagion", "Anonymous login failed. " + e.getMessage());
+                        playButton.setEnabled(true);
+                    } else {
+                        Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
+                        startActivity(intent);
+                        finish();
+                        Log.d("Contagion", "Anonymous user logged in.");
+                    }
+                }
+            });
 
         }
     };

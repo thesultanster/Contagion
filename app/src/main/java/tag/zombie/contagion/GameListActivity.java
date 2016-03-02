@@ -97,10 +97,13 @@ public class GameListActivity extends AppCompatActivity{
 
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
-
-                mSwipeRefreshLayout.setRefreshing(false);
-                for (ParseObject game : objects){
-                    adapter.addRow(new GameListActivityRecyclerInfo(game));
+                if (e == null) {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                    for (ParseObject game : objects) {
+                        adapter.addRow(new GameListActivityRecyclerInfo(game));
+                    }
+                } else {
+                    Log.e("Contagion", " Error getting game list: " + e.getMessage());
                 }
             }
         });

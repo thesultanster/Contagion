@@ -43,15 +43,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/abc_action_bar_default_height_material"
+                android:background="?attr/colorPrimary"
+                android:minHeight="?attr/actionBarSize"
+                android:theme="@style/AppTheme.Dark"
+                app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed" />
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/abc_action_bar_default_height_material"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="@style/AppTheme.Dark"
-            app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed" />
+            <Button
+                android:id="@+id/addButton"
+                android:layout_width="@dimen/abc_action_bar_default_height_material"
+                android:layout_height="@dimen/abc_action_bar_default_height_material"
+                android:text="hi"
+                android:textColor="@color/colorAccent"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"/>
+
     </android.support.design.widget.AppBarLayout>
 
 </android.support.design.widget.CoordinatorLayout>

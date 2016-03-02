@@ -155,7 +155,16 @@ Parse.Cloud.define("newGame", function(request, response) {
   game.save(null, {
     success: function(game) {
       alert("newGame created " + game.id + ": " + request.params.gameName);
-      response.success("<newGame> ***Created new game!\t " + game.id + ": " + request.params.gameName + "*** <newGame>");
+
+      Parse.Cloud.run('addPersonToGame', { gameId: game.id }, {
+        success: function(success) {
+          response.success("<newGame> ***Created new game!\t " + game.id + ": " + request.params.gameName + "*** <newGame>");
+        },
+        error: function(error) {
+          alert("Error: " + error.code + " " + error.message);
+          response.error("<ERROR> <newGame> ***Could not add current user to new game*** <newGame> <ERROR>");
+        }
+      });
     },
     error: function(game, error) {
       alert("Error: " + error.code + " " + error.message);

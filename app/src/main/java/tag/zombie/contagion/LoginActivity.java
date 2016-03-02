@@ -32,20 +32,22 @@ public class LoginActivity extends AppCompatActivity {
     View.OnClickListener buttonListener = new View.OnClickListener() {
         public void onClick(View v) {
 
-            ParseAnonymousUtils.logIn(new LogInCallback() {
-                @Override
-                public void done(ParseUser user, ParseException e) {
-                    if (e != null) {
-                        Log.d("MyApp", "Anonymous login failed.");
-                    } else {
-
-                        Intent intent = new Intent(getApplicationContext(), GameListActivity.class);
-                        startActivity(intent);
-                        finish();
-                        Log.d("MyApp", "Anonymous user logged in.");
-                    }
-                }
-            });
+        Log.d("Contagion", "Logging in anonymous user.");
+        playButton.setEnabled(false);
+        ParseAnonymousUtils.logIn(new LogInCallback() {
+            @Override
+            public void done(ParseUser user, ParseException e) {
+            if (e != null) {
+                Log.d("Contagion", "Anonymous login failed.");
+                playButton.setEnabled(true);
+            } else {
+                Intent intent = new Intent(getApplicationContext(), GameListActivity.class);
+                startActivity(intent);
+                finish();
+                Log.d("Contagion", "Anonymous user logged in.");
+            }
+            }
+        });
 
         }
     };

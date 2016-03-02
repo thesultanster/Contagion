@@ -12,6 +12,7 @@ import com.parse.LogInCallback;
 import com.parse.ParseAnonymousUtils;
 import com.parse.ParseException;
 import com.parse.ParseUser;
+import com.parse.SignUpCallback;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -23,8 +24,8 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        nameEditText = (EditText)findViewById(R.id.nameEditText);
-        playButton = (Button)findViewById(R.id.playButton);
+        nameEditText = (EditText) findViewById(R.id.nameEditText);
+        playButton = (Button) findViewById(R.id.playButton);
 
         playButton.setOnClickListener(buttonListener);
     }
@@ -32,22 +33,31 @@ public class LoginActivity extends AppCompatActivity {
     View.OnClickListener buttonListener = new View.OnClickListener() {
         public void onClick(View v) {
 
-        Log.d("Contagion", "Logging in anonymous user.");
-        playButton.setEnabled(false);
-        ParseAnonymousUtils.logIn(new LogInCallback() {
-            @Override
-            public void done(ParseUser user, ParseException e) {
-            if (e != null) {
-                Log.d("Contagion", "Anonymous login failed.");
-                playButton.setEnabled(true);
-            } else {
-                Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
-                startActivity(intent);
-                finish();
-                Log.d("Contagion", "Anonymous user logged in.");
+            if (ParseUser.getCurrentUser() != null) {
+                ParseUser.getCurrentUser().logOut();
+                //Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
+                //startActivity(intent);
+                //finish();
             }
-            }
-        });
+
+
+            ParseUser user = new ParseUser();
+            user.setUsername(nameEditText.getText().toString());
+            user.setPassword("pass");
+            user.signUpInBackground(new SignUpCallback() {
+                public void done(ParseException e) {
+                    if (e != null) {
+                        Log.d("Contagion", " login failed.");
+                        playButton.setEnabled(true);
+                    } else {
+                        Intent intent = new Intent(getApplicationContext(), SplashScreenLoadGPS.class);
+                        startActivity(intent);
+                        finish();
+                        Log.d("Contagion", " user logged in.");
+                    }
+                }
+            });
+
 
         }
     };

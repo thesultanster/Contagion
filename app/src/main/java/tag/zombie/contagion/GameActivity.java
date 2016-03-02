@@ -50,16 +50,20 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
+import com.parse.GetCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import org.json.JSONArray;
 
@@ -155,20 +159,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Start Location Tracker
         fallbackLocationTracker = new FallbackLocationTracker(this);
 
-        if (fallbackLocationTracker != null) {
 
-            // Then find fine location
-            fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
-                @Override
-                public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
-                    //fallbackLocationTracker.stop();
-                    ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
-                    ParseUser.getCurrentUser().saveInBackground();
-                    // Go to activity
-                }
-            });
-
-        }
 
     }
 
@@ -185,17 +176,55 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         StartHeartAnimation();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseObject>() {
+                @Override
+                public void done(ParseObject object, ParseException e) {
+                    game = (ParseObject) ParseUser.getCurrentUser().get("gameId");
+                    Log.d("Contagion", "Got user's current game.");
+                }
+            });
+
+        } catch (Exception e) {
+            Log.e("Contagion","ERROR: Could not get game object " + e.getMessage());
+        }
+
+        if (fallbackLocationTracker != null) {
+
+            // Then find fine location
+            fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
+                @Override
+                public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
+                    //fallbackLocationTracker.stop();
+                    ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
+                    ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            Log.d("on update", "got newLoc");
+                        }
+                    });
+
+                }
+            });
+
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        fallbackLocationTracker.stop();
+    }
+
     /*===UI STUFF===*/
 
     private void inflateVariables() {
 
-        try {
-            ParseUser.getCurrentUser().fetch();
-            game = (ParseObject) ParseUser.getCurrentUser().get("gameId");
-            Log.d("Contagion","Got user's current game.");
-        } catch (ParseException e) {
-            Log.e("Contagion","ERROR: Could not get game object " + e.getMessage());
-        }
+
 
         // Inflate Variables
         userStateView = findViewById(R.id.userstate);
@@ -290,6 +319,30 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void UpdateGame() {
 
+        if(game == null){
+            Log.d("game is", "null");
+            return;
+        }
+
+
+
+        // Then find fine location
+        fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
+            @Override
+            public void onUpdate(Location oldLoc, long oldTime, Location newLoc, long newTime) {
+                //fallbackLocationTracker.stop();
+                ParseUser.getCurrentUser().put("location", new ParseGeoPoint(newLoc.getLatitude(), newLoc.getLongitude()));
+                ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        Log.d("on update", "got newLoc");
+                    }
+                });
+
+            }
+        });
+
+
         ParseQuery<ParseObject> query = new ParseQuery("Game");
         query.whereEqualTo("objectId", game.getObjectId());
         query.include("healthyPlayers");
@@ -318,14 +371,18 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                                 // If user is healthy
-                                if (ParseUser.getCurrentUser().getString("status").equals("healthy")) {
+                                if (user.getString("status").equals("healthy")) {
                                     map.addMarker(new MarkerOptions()
                                             .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
                                             .title("Healthy Player"));
 
 
-                                } else if (ParseUser.getCurrentUser().getString("status").equals("infected")) {
-
+                                } else if (user.getString("status").equals("infected")) {
+                                    BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.zombie_icon);
+                                    map.addMarker(new MarkerOptions()
+                                            .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
+                                            .title("Zombie")
+                                            .icon(icon));
                                 }
 
                             }

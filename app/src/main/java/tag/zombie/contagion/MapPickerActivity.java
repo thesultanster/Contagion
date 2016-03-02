@@ -75,7 +75,7 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                         if (e != null) {
                             Toast.makeText(MapPickerActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(MapPickerActivity.this, "Create new safe zone", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MapPickerActivity.this, "Created new safe zone", Toast.LENGTH_SHORT).show();
                         }
 //                        else {
 //                            Intent intent = new Intent(getApplicationContext(), GameListActivity.class);

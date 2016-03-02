@@ -260,17 +260,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                 if (map != null) {
-                    map.clear();
+                    //map.clear();
 
 
 
                     ParseQuery<ParseUser> innerQuery = new ParseQuery<ParseUser>("_User");
-                    innerQuery.whereEqualTo("game", game);
                     innerQuery.findInBackground(new FindCallback<ParseUser>() {
                         @Override
                         public void done(List<ParseUser> objects, ParseException e) {
 
-                            Log.d("user query", "done");
+                            Log.d("user query", String.valueOf(objects.size()));
                             for (ParseUser user : objects) {
                                 map.addMarker(new MarkerOptions()
                                         .position(new LatLng(user.getParseGeoPoint("location").getLongitude(), user.getParseGeoPoint("location").getLatitude()))

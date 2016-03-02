@@ -1,4 +1,4 @@
-package tag.zombie.contagion;
+package tag.zombie.contagion.LobbyActivity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -17,33 +17,26 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import tag.zombie.contagion.LobbyActivity.LobbyActivity;
+import tag.zombie.contagion.GameActivity;
+import tag.zombie.contagion.R;
 
 /**
- * Created by Sultan on 10/3/2015.
+ * Created by Leia on 3/2/16.
  */
-public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameListActivityRecyclerAdapter.MyViewHolder> {
+public class LobbyActivityRecyclerAdapter extends RecyclerView.Adapter<LobbyActivityRecyclerAdapter.MyViewHolder> {
 
     // emptyList takes care of null pointer exception
-    List<GameListActivityRecyclerInfo> data = Collections.emptyList();
+    List<LobbyActivityRecyclerInfo> data = Collections.emptyList();
     LayoutInflater inflator;
     Context context;
-    //List<GameListActivityRecyclerInfo>mDataSet;
 
-    public GameListActivityRecyclerAdapter(GameListActivity context, List<GameListActivityRecyclerInfo> data) {
+    public LobbyActivityRecyclerAdapter(LobbyActivity context, List<LobbyActivityRecyclerInfo> data) {
         this.context = context;
         inflator = LayoutInflater.from(context);
         this.data = data;
     }
 
-
-    /*picture = (Bitmap) ex.get("data");
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-    picture.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-    // get byte array here
-    bytearray= stream.toByteArray();*/
-
-    public void addRow(GameListActivityRecyclerInfo row) {
+    public void addRow(LobbyActivityRecyclerInfo row) {
         data.add(row);
         notifyItemInserted(getItemCount() - 1);
     }
@@ -60,35 +53,12 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        final View view = inflator.inflate(R.layout.row_game_list, parent, false);
+        final View view = inflator.inflate(R.layout.row_lobby, parent, false);
         final MyViewHolder holder = new MyViewHolder(view, new MyViewHolder.MyViewHolderClicks() {
 
             public void rowClick(View caller, int position) {
                 android.util.Log.d("rowClick", "rowClicks");
-
-
-                HashMap<String, Object> params = new HashMap<String, Object>();
-                params.put("gameId", data.get(position).getParseObjectId());
-
-                ParseCloud.callFunctionInBackground("addPersonToGame", params, new FunctionCallback<String>() {
-                    public void done(String response, ParseException e) {
-                        if (e == null) {
-                            Log.d("<CLOUD CODE BITCH>", response);
-                        } else {
-                            Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG");
-                            Log.d("<CLOUD CODE BITCH>", e.toString());
-                        }
-                    }
-                });
-
-//                Intent intent = new Intent(context, GameActivity.class);
-                Intent intent = new Intent(context, LobbyActivity.class);
-                context.startActivity(intent);
-
             }
-
-
-
 
         });
         return holder;
@@ -99,10 +69,9 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
     public void onBindViewHolder(MyViewHolder holder, int position) {
 
         // This gives us current information list object
-        GameListActivityRecyclerInfo current = data.get(position);
+        LobbyActivityRecyclerInfo current = data.get(position);
 
         holder.name.setText(current.getName());
-        holder.playerCount.setText(current.getPlayerCount());
     }
 
     @Override
@@ -114,7 +83,6 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
     public static class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView name;
-        TextView playerCount;
 
         public MyViewHolderClicks mListener;
 
@@ -124,7 +92,6 @@ public class GameListActivityRecyclerAdapter extends RecyclerView.Adapter<GameLi
 
             mListener = listener;
             name = (TextView) itemView.findViewById(R.id.name);
-            playerCount = (TextView) itemView.findViewById(R.id.playerCount);
             itemView.setOnClickListener(this);
 
         }

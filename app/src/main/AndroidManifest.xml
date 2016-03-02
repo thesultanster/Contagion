@@ -44,7 +44,7 @@ android:supportsRtl="true" android:name=".Util.Application" android:theme="@styl
         android:screenOrientation="portrait">
     </activity>
 
-    <activity android:name=".LobbyActivity" />
+    <activity android:name=".LobbyActivity.LobbyActivity" />
 
     <activity android:name=".GameListActivity"></activity>
 

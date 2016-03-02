@@ -83,6 +83,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /*===Parse Stuff===*/
     ParseObject game;
+    String gameId;
     WorkerThread listenerThread;
 
     /*===UI Stuff===*/
@@ -132,6 +133,8 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        gameId = getIntent().getExtras().getString("gameId");
 
         // Inflate Variables
         inflateVariables();
@@ -319,12 +322,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void UpdateGame() {
 
-        if(game == null){
-            Log.d("game is", "null");
-            return;
-        }
-
-
 
         // Then find fine location
         fallbackLocationTracker.start(new LocationTracker.LocationUpdateListener() {
@@ -344,7 +341,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         ParseQuery<ParseObject> query = new ParseQuery("Game");
-        query.whereEqualTo("objectId", game.getObjectId());
+        query.whereEqualTo("objectId", gameId);
         query.include("healthyPlayers");
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
@@ -571,7 +568,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //TAG THE BITCH
         HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("gameId", game.getObjectId());
+        params.put("gameId", gameId);
 
         ParseCloud.callFunctionInBackground("addInfected", params, new FunctionCallback<String>() {
             public void done(String response, ParseException e) {

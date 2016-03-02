@@ -65,6 +65,7 @@ public class LobbyActivity extends AppCompatActivity {
         public void onClick(View v) {
 
             Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
+            intent.putExtra("gameId", game.getObjectId());
             startActivity(intent);
             Log.d("Contagion", "Going to game room.");
         }

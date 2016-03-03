@@ -12,7 +12,9 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,12 +25,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.parse.FindCallback;
+import com.parse.FunctionCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import tag.zombie.contagion.Util.FallbackLocationTracker;
@@ -36,8 +43,9 @@ import tag.zombie.contagion.Util.LocationTracker;
 
 public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-
-    AppCompatButton setMeetupLocation;
+    List<ParseObject> safeZoneLocations;
+    AppCompatButton setSafeZone;
+    Button doneButton;
 
     FallbackLocationTracker fallbackLocationTracker;
     GoogleMap map;
@@ -50,17 +58,49 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_picker);
 
+        safeZoneLocations = new ArrayList<ParseObject>();
+
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setTitle("Set Meeting Location");
+        getSupportActionBar().setTitle("Set Safe Zone");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
+        doneButton = (Button) findViewById(R.id.doneButton);
+        doneButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-        setMeetupLocation = (AppCompatButton) findViewById(R.id.setSafeZone);
-        setMeetupLocation.setSupportBackgroundTintList(new ColorStateList(new int[][]{new int[0]}, new int[]{getResources().getColor(R.color.colorAccent)}));
-        setMeetupLocation.setOnClickListener(new View.OnClickListener() {
+                Intent fromIntent = getIntent();
+                String gameName = fromIntent.getStringExtra("gameRoomName");
+
+                //CREATE NEW GAME
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("gameName", gameName);
+
+                ParseCloud.callFunctionInBackground("newGame", params, new FunctionCallback<ParseObject>() {
+                    public void done(ParseObject newGame, ParseException e) {
+                        if (e == null) {
+                            Log.d("<CLOUD CODE BITCH>", newGame.toString());
+                            newGame.put("safeZones", safeZoneLocations);
+                            newGame.saveInBackground();
+
+                            Intent intent = new Intent(getApplicationContext(), GameActivity.class);
+                            startActivity(intent);
+                        } else {
+                            Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: newGame");
+                            Log.d("<CLOUD CODE BITCH>", e.toString());
+                        }
+                    }
+                });
+
+            }
+        });
+
+        setSafeZone = (AppCompatButton) findViewById(R.id.setSafeZone);
+        setSafeZone.setSupportBackgroundTintList(new ColorStateList(new int[][]{new int[0]}, new int[]{getResources().getColor(R.color.colorAccent)}));
+        setSafeZone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ParseUser.getCurrentUser().put("location", new ParseGeoPoint(map.getCameraPosition().target.latitude, map.getCameraPosition().target.longitude));
@@ -68,27 +108,37 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                     @Override
                     public void done(ParseException e) {
 
-
-                        Bundle args = new Bundle();
-                        args.putParcelable("meetingLocation", new LatLng(map.getCameraPosition().target.latitude, map.getCameraPosition().target.longitude));
-
                         if (e != null) {
                             Toast.makeText(MapPickerActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+
                         } else {
-                            Toast.makeText(MapPickerActivity.this, "Created new safe zone", Toast.LENGTH_SHORT).show();
+                            // save selected location
+                            ParseGeoPoint newSafeZoneGeoPoint = new ParseGeoPoint(
+                                    map.getCameraPosition().target.latitude,
+                                    map.getCameraPosition().target.longitude);
+
+                            final ParseObject newSafeZone = new ParseObject("SafeZone");
+                            newSafeZone.put("location", newSafeZoneGeoPoint);
+                            newSafeZone.put("name", "my safe zone");
+                            newSafeZone.put("radius", 0.5);
+                            newSafeZone.saveInBackground(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+
+                                    if (e != null) {
+                                        Toast.makeText(MapPickerActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        safeZoneLocations.add(newSafeZone);
+                                        Toast.makeText(MapPickerActivity.this, "Created New Safe Zone", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
                         }
-//                        else {
-//                            Intent intent = new Intent(getApplicationContext(), GameListActivity.class);
-//                            intent.putExtras(args);
-//                            startActivity(intent);
-//                        }
                     }
                 });
 
             }
         });
-
-
 
         // Create instance of custom mapFragment
         // Set up map and touch listener
@@ -97,12 +147,8 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
         map = mFrag.getMap();
         mFrag.getMapAsync(this);
 
-
-
         // Start Location Tracker
         fallbackLocationTracker = new FallbackLocationTracker(this, 30000);
-
-
 
     }
 
@@ -201,9 +247,6 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
 
         }
     }
-
-
-
 
 
 }

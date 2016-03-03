@@ -2,6 +2,7 @@ package tag.zombie.contagion.LobbyActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -63,6 +64,12 @@ public class LobbyActivity extends AppCompatActivity {
 
     View.OnClickListener buttonListener = new View.OnClickListener() {
         public void onClick(View v) {
+
+            // MY_PREFS_NAME - a static String variable like:
+            //public static final String MY_PREFS_NAME = "MyPrefsFile";
+            SharedPreferences.Editor editor = getSharedPreferences("GAME_ID", MODE_PRIVATE).edit();
+            editor.putString("gameId", game.getObjectId());
+            editor.commit();
 
             Intent intent = new Intent(LobbyActivity.this, GameActivity.class);
             intent.putExtra("gameId", game.getObjectId());

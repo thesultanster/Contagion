@@ -11,6 +11,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -134,7 +135,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
-        gameId = getIntent().getExtras().getString("gameId");
+        //gameId = getIntent().getExtras().getString("gameId");
 
         // Inflate Variables
         inflateVariables();
@@ -153,16 +154,12 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
         //check if nfc is enabled if it is then handle nfc intent
         if (nfc) {
             handleIntent(getIntent());
+            //sets the NdefMessage to push during beam
+            mNfcAdapter.setNdefPushMessageCallback(this, this);
         }
-        //sets the NdefMessage to push during beam
-        if (nfc) mNfcAdapter.setNdefPushMessageCallback(this, this);
-
-
 
         // Start Location Tracker
         fallbackLocationTracker = new FallbackLocationTracker(this);
-
-
 
     }
 
@@ -182,12 +179,22 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onResume() {
         super.onResume();
+
+        SharedPreferences prefs = getSharedPreferences("GAME_ID", MODE_PRIVATE);
+        String restoredText = prefs.getString("gameId", null);
+        if (restoredText != null) {
+            gameId = prefs.getString("gameId", "No name defined"); //"No name defined" is the default value.
+        }
+
         try {
             ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseObject>() {
                 @Override
                 public void done(ParseObject object, ParseException e) {
-                    game = (ParseObject) ParseUser.getCurrentUser().get("gameId");
-                    Log.d("Contagion", "Got user's current game.");
+//                    game = (ParseObject) ParseUser.getCurrentUser().get("gameId");
+                    Log.d("Contagion", "User is infected.");
+                    if (object.getString("status").equals("infected")) {
+                        animateInfected();
+                    }
                 }
             });
 
@@ -474,42 +481,55 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 listenerThread.stahp();
                 listenerThread.interrupt();
 
-                ParseQuery<ParseObject> query = new ParseQuery("Game");
-                query.whereEqualTo("objectId", "m3rnAai0Hf");
-                query.findInBackground(new FindCallback<ParseObject>() {
-                    @Override
-                    public void done(List<ParseObject> objects, ParseException e) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
 
-                        HashMap<String, Object> params = new HashMap<String, Object>();
-
-                        ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
-                            public void done(String response, ParseException e) {
-                                if (e == null) {
-                                    Log.d("<CLOUD CODE BITCH>", response);
-
-
-                                } else {
-                                    Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: leaveGame");
-                                    Log.d("<CLOUD CODE BITCH>", e.toString());
-                                }
-                            }
-                        });
-
-
-                        Log.d("Contagion", "Anonymous user left game");
-
-                        stopBluetooh();
-
-                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        startActivity(intent);
-                        finish();
-
-
+                ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
+                    public void done(String response, ParseException e) {
+                        if (e == null) {
+                            Log.d("<CLOUD CODE BITCH>", response);
+                        } else {
+                            Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: leaveGame");
+                            Log.d("<CLOUD CODE BITCH>", e.toString());
+                        }
                     }
-
-
                 });
 
+                Log.d("Contagion", "Anonymous user left game");
+
+                stopBluetooh();
+
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
+                finish();
+
+//                ParseQuery<ParseObject> query = new ParseQuery("Game");
+//                query.whereEqualTo("objectId", gameId);
+//                query.findInBackground(new FindCallback<ParseObject>() {
+//                    @Override
+//                    public void done(List<ParseObject> objects, ParseException e) {
+//
+//                        HashMap<String, Object> params = new HashMap<String, Object>();
+//
+//                        ParseCloud.callFunctionInBackground("leaveGame", params, new FunctionCallback<String>() {
+//                            public void done(String response, ParseException e) {
+//                                if (e == null) {
+//                                    Log.d("<CLOUD CODE BITCH>", response);
+//                                } else {
+//                                    Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: leaveGame");
+//                                    Log.d("<CLOUD CODE BITCH>", e.toString());
+//                                }
+//                            }
+//                        });
+//
+//                        Log.d("Contagion", "Anonymous user left game");
+//
+//                        stopBluetooh();
+//
+//                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+//                        startActivity(intent);
+//                        finish();
+//                    }
+//                });
 
             }
         });
@@ -581,13 +601,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                             Log.d("<NFC BITCH>", "YOU DIDN'T INITIATE BEAM...YOU BITCH");
                     }
 
-                    itButton.setVisibility(View.GONE);
-
-                    userStateTextView.setText("Infected");
-                    userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
-                    heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
-                    frameAnimation = (AnimationDrawable) heartImage.getBackground();
-                    frameAnimation.start();
+                    animateInfected();
 
                     taggedUpdateBLE();
 
@@ -597,6 +611,16 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+    }
+
+    private void animateInfected() {
+        itButton.setVisibility(View.GONE);
+
+        userStateTextView.setText("Infected");
+        userStateLayout.setBackgroundColor(Color.parseColor("#FF6600"));
+        heartImage.setBackgroundResource(R.drawable.heart_animation_infected);
+        frameAnimation = (AnimationDrawable) heartImage.getBackground();
+        frameAnimation.start();
     }
 
     //creates the NdefMessage that will be used when connecting with nfc

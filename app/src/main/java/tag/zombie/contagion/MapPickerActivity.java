@@ -86,8 +86,12 @@ public class MapPickerActivity extends AppCompatActivity implements OnMapReadyCa
                             newGame.put("safeZones", safeZoneLocations);
                             newGame.saveInBackground();
 
-                            Intent intent = new Intent(getApplicationContext(), GameActivity.class);
+//                            Intent intent = new Intent(getApplicationContext(), GameActivity.class);
+//                            startActivity(intent);
+                            Intent intent = new Intent(MapPickerActivity.this, GameActivity.class);
+                            intent.putExtra("gameId", newGame.getObjectId());
                             startActivity(intent);
+
                         } else {
                             Log.d("<CLOUD CODE BITCH>", "SOMETHING IS WRONG: newGame");
                             Log.d("<CLOUD CODE BITCH>", e.toString());

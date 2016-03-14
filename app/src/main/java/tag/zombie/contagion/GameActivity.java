@@ -58,6 +58,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.GetCallback;
+import com.parse.Parse;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
@@ -271,7 +272,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
         screamEffect = Uri.parse(s + "/scream.mp3");
-        soundEffects = MediaPlayer.create(this, R.raw.breathingZombie);
+        soundEffects = MediaPlayer.create(this, R.raw.breathing_zombie);
         soundEffects.setLooping(false);
 //        soundEffects.start();
 
@@ -346,7 +347,24 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
+        try {
+            ParseUser.getCurrentUser().fetchInBackground(new GetCallback<ParseObject>() {
+                @Override
+                public void done(ParseObject object, ParseException e) {
+//                    game = (ParseObject) ParseUser.getCurrentUser().get("gameId");
+                    if (object.getString("status").equals("infected")) {
+                        Log.d("Contagion", "User is infected.");
+                        hunted = false;
+                    } else {
+                        hunted = true;
+                        Log.d("Contagion", "User is healthy.");
+                    }
+                }
+            });
 
+        } catch (Exception e) {
+            Log.e("Contagion","ERROR: Could not get game object " + e.getMessage());
+        }
         ParseQuery<ParseObject> query = new ParseQuery("Game");
         query.whereEqualTo("objectId", gameId);
         query.include("healthyPlayers");
@@ -358,7 +376,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 healthyPlayers.setText(game.getInt("healthyCount") + "");
                 infectedPlayers.setText(game.getInt("infectedCount") + "");
-
 
                 if (map != null) {
                     map.clear();
@@ -379,7 +396,6 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     map.addMarker(new MarkerOptions()
                                             .position(new LatLng(user.getParseGeoPoint("location").getLatitude(), user.getParseGeoPoint("location").getLongitude()))
                                             .title("Healthy Player"));
-
 
                                 } else if (user.getString("status").equals("infected")) {
                                     BitmapDescriptor icon = BitmapDescriptorFactory.fromResource(R.mipmap.zombie_icon);
@@ -637,10 +653,10 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void bluetoothUpdate() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             //BLE Scan for zombies
+            scannerBLE.stopScan(scanBLEcallBack);
             if (hunted) {
                 //healthy people code
                 Log.d("<Game Update>", "Still running from them damn zombeez :(");
-                scannerBLE.stopScan(scanBLEcallBack);
                 scannerBLE.startScan(scanFilters, scanSettings, scanBLEcallBack);
 
             } else {

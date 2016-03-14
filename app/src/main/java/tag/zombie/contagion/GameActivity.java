@@ -271,7 +271,7 @@ public class GameActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
         screamEffect = Uri.parse(s + "/scream.mp3");
-        soundEffects = MediaPlayer.create(this, R.raw.scream);
+        soundEffects = MediaPlayer.create(this, R.raw.breathingZombie);
         soundEffects.setLooping(false);
 //        soundEffects.start();
 
